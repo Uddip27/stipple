@@ -60,6 +60,9 @@ const state = {
   gifSize: 600,
   playing: false,
   hasResult: false,
+  zoom: 1,
+  panX: 0,
+  panY: 0,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -95,6 +98,8 @@ const els = {
   logoThumb: $('logoThumb'), logoName: $('logoName'), logoSize: $('logoSize'),
   thresholdBlock: $('thresholdBlock'), threshold: $('threshold'), thresholdValue: $('thresholdValue'),
   bgGroup: $('bgGroup'), overlayBlock: $('overlayBlock'), lightRow: $('lightRow'),
+  framingBlock: $('framingBlock'), zoomRange: $('zoomRange'), zoomValue: $('zoomValue'),
+  panXRange: $('panXRange'), panXValue: $('panXValue'), panYRange: $('panYRange'), panYValue: $('panYValue'),
   dotScaleLabel: $('dotScaleLabel'), dotScaleEnds: $('dotScaleEnds'),
   toast: $('toast'), toastMsg: $('toastMsg'),
 };
@@ -121,13 +126,28 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawCover(ctx, img, px) {
+function coverRect(img, px, frame) {
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;
-  const scale = Math.max(px / iw, px / ih);
+  const scale = Math.max(px / iw, px / ih) * (frame?.zoom || 1);
   const w = iw * scale;
   const h = ih * scale;
-  ctx.drawImage(img, (px - w) / 2, (px - h) / 2, w, h);
+  const ox = Math.max(0, (w - px) / 2);
+  const oy = Math.max(0, (h - px) / 2);
+  return {
+    x: (px - w) / 2 + (frame?.panX || 0) * ox,
+    y: (px - h) / 2 + (frame?.panY || 0) * oy,
+    w, h, ox, oy,
+  };
+}
+
+function drawCover(ctx, img, px, frame) {
+  const r = coverRect(img, px, frame);
+  if (r.w < px - 0.5 || r.h < px - 0.5) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, px, px);
+  }
+  ctx.drawImage(img, r.x, r.y, r.w, r.h);
 }
 
 function drawDot(ctx, cx, cy, d, style) {
@@ -157,12 +177,12 @@ function drawTrack(ctx, x0, y0, x1, y1, d) {
   ctx.fill();
 }
 
-function sampleLuminance(img, n) {
+function sampleLuminance(img, n, frame) {
   const dim = n + MARGIN * 2;
   const off = document.createElement('canvas');
   off.width = dim; off.height = dim;
   const octx = off.getContext('2d', { willReadFrequently: true });
-  drawCover(octx, img, dim);
+  drawCover(octx, img, dim, frame);
   const data = octx.getImageData(0, 0, dim, dim).data;
   const lum = new Float32Array(n * n);
   for (let r = 0; r < n; r++) {
@@ -268,7 +288,7 @@ function renderQR(canvas, cfg, px) {
   const cell = px / (n + MARGIN * 2);
 
   if (isWatermark && cfg.image) {
-    drawCover(ctx, cfg.image, px);
+    drawCover(ctx, cfg.image, px, cfg);
     if (cfg.overlay !== 0) {
       const a = Math.min(Math.abs(cfg.overlay) / 100, 1);
       ctx.fillStyle = cfg.overlay > 0 ? `rgba(255, 255, 255, ${a})` : `rgba(2, 6, 23, ${a})`;
@@ -292,7 +312,7 @@ function renderQR(canvas, cfg, px) {
   ctx.fillRect(0, quiet, quiet, px - quiet * 2);
   ctx.fillRect(px - quiet, quiet, quiet, px - quiet * 2);
 
-  const lum = mode === 'halftone' && cfg.image ? sampleLuminance(cfg.image, n) : null;
+  const lum = mode === 'halftone' && cfg.image ? sampleLuminance(cfg.image, n, cfg) : null;
   const ink = makeInk(ctx, cfg, px, isWatermark && cfg.colorType === 'solid' ? cfg.dark.alpha : 1);
   const light = rgba(cfg.light.hex, cfg.light.alpha);
   const d = cell * cfg.dotScale;
@@ -393,7 +413,7 @@ function motionImage(cfg, time, surface, px) {
   ctx.translate(px / 2 + shift, px / 2);
   ctx.scale(zoom, zoom);
   ctx.translate(-px / 2, -px / 2);
-  drawCover(ctx, cfg.image, px);
+  drawCover(ctx, cfg.image, px, cfg);
   return surface;
 }
 
@@ -501,6 +521,7 @@ function hideOverlay() {
 }
 
 function renderMain() {
+  syncFramingUI();
   const text = state.text.trim();
   if (!text) {
     showOverlay('Type a message or URL to begin');
@@ -553,6 +574,7 @@ function fmtSize(bytes) {
 function setImage(img, label, sizeText, thumbSrc, sampleId, animation = null) {
   resetPlayback(!!animation || (state.motion !== 'still' && state.motion !== 'source'));
   state.image = img;
+  resetFraming();
   state.animation = animation;
   if (animation?.frames.length > 1) {
     state.motion = 'source';
@@ -637,6 +659,7 @@ function removeImage() {
   state.animation = null;
   state.motion = 'still';
   state.image = null;
+  resetFraming();
   els.previewThumb.removeAttribute('src');
   state.sampleId = null;
   els.imgPreview.hidden = true;
@@ -690,6 +713,61 @@ function removeLogo(silent) {
     scheduleRender();
     toast('Logo removed — Stipple seal restored');
   }
+}
+
+/* ---------------- background framing ---------------- */
+
+function framingAvailable() {
+  return !!state.image && (state.mode === 'watermark' || state.mode === 'halftone');
+}
+
+function fitZoom() {
+  if (!state.image) return 1;
+  const iw = state.image.naturalWidth || state.image.width;
+  const ih = state.image.naturalHeight || state.image.height;
+  return Math.min(iw, ih) / Math.max(iw, ih);
+}
+
+function clampZoom(z) {
+  return Math.min(3, Math.max(fitZoom(), z));
+}
+
+function resetFraming() {
+  state.zoom = 1;
+  state.panX = 0;
+  state.panY = 0;
+}
+
+function syncFramingUI() {
+  const available = framingAvailable();
+  els.framingBlock.hidden = !available;
+  els.canvas.parentElement.classList.toggle('framing-on', available);
+  if (!available) return;
+  els.zoomRange.min = String(Math.round(fitZoom() * 100));
+  els.zoomRange.value = String(Math.round(state.zoom * 100));
+  els.zoomValue.textContent = Math.round(state.zoom * 100) + '%';
+  fillRange(els.zoomRange);
+  const r = coverRect(state.image, SIZE, state);
+  els.panXRange.disabled = r.ox < 1;
+  els.panYRange.disabled = r.oy < 1;
+  els.panXRange.value = String(Math.round(state.panX * 100));
+  els.panYRange.value = String(Math.round(state.panY * 100));
+  els.panXValue.textContent = Math.round(state.panX * 100) + '%';
+  els.panYValue.textContent = Math.round(state.panY * 100) + '%';
+  fillRange(els.panXRange);
+  fillRange(els.panYRange);
+}
+
+function setZoom(z) {
+  state.zoom = clampZoom(z);
+  syncFramingUI();
+  scheduleRender();
+}
+
+function setPan(axis, v) {
+  state[axis] = Math.min(1, Math.max(-1, v));
+  syncFramingUI();
+  scheduleRender();
 }
 
 /* ---------------- control sync ---------------- */
@@ -790,6 +868,7 @@ function syncUI() {
   els.overlay.value = state.overlay;
   els.overlayValue.textContent = overlayLabel(state.overlay);
   fillRange(els.overlay);
+  syncFramingUI();
   syncMotionUI();
 }
 
@@ -799,6 +878,7 @@ function applyConfig(cfg) {
   resetPlayback();
   state.animation = null;
   state.motion = 'still';
+  resetFraming();
   state.duration = 3;
   state.format = 'png';
   state.gifSize = 600;
@@ -960,6 +1040,56 @@ els.fileInput.addEventListener('change', () => handleFile(els.fileInput.files[0]
 els.dropzone.addEventListener('drop', (e) => handleFile(e.dataTransfer.files[0]));
 
 $('removeImage').addEventListener('click', removeImage);
+
+els.zoomRange.addEventListener('input', () => setZoom(Number(els.zoomRange.value) / 100));
+$('zoomIn').addEventListener('click', () => setZoom(state.zoom + 0.1));
+$('zoomOut').addEventListener('click', () => setZoom(state.zoom - 0.1));
+els.panXRange.addEventListener('input', () => setPan('panX', Number(els.panXRange.value) / 100));
+els.panYRange.addEventListener('input', () => setPan('panY', Number(els.panYRange.value) / 100));
+$('frameFit').addEventListener('click', () => {
+  state.zoom = fitZoom();
+  state.panX = 0;
+  state.panY = 0;
+  syncFramingUI();
+  scheduleRender();
+});
+$('frameFill').addEventListener('click', () => {
+  resetFraming();
+  syncFramingUI();
+  scheduleRender();
+});
+
+let dragState = null;
+els.canvas.addEventListener('pointerdown', (e) => {
+  if (!framingAvailable() || exportController) return;
+  const r = coverRect(state.image, SIZE, state);
+  const touch = e.pointerType === 'touch';
+  if (touch ? r.ox < 1 : r.ox < 1 && r.oy < 1) return;
+  dragState = { id: e.pointerId, x: e.clientX, y: e.clientY, panX: state.panX, panY: state.panY, ox: r.ox, oy: r.oy, touch };
+  els.canvas.setPointerCapture(e.pointerId);
+  els.canvas.parentElement.classList.add('dragging');
+  e.preventDefault();
+});
+els.canvas.addEventListener('pointermove', (e) => {
+  if (!dragState || e.pointerId !== dragState.id) return;
+  const k = SIZE / els.canvas.getBoundingClientRect().width;
+  if (dragState.ox >= 1) state.panX = Math.min(1, Math.max(-1, dragState.panX + (e.clientX - dragState.x) * k / dragState.ox));
+  if (!dragState.touch && dragState.oy >= 1) state.panY = Math.min(1, Math.max(-1, dragState.panY + (e.clientY - dragState.y) * k / dragState.oy));
+  syncFramingUI();
+  scheduleRender();
+});
+const endDrag = (e) => {
+  if (!dragState || e.pointerId !== dragState.id) return;
+  dragState = null;
+  els.canvas.parentElement.classList.remove('dragging');
+};
+els.canvas.addEventListener('pointerup', endDrag);
+els.canvas.addEventListener('pointercancel', endDrag);
+els.canvas.addEventListener('wheel', (e) => {
+  if (!framingAvailable() || exportController || !(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  setZoom(state.zoom * Math.exp(-e.deltaY * 0.002));
+}, { passive: false });
 
 els.logoDrop.addEventListener('click', () => els.logoInput.click());
 els.logoDrop.addEventListener('keydown', (e) => {
