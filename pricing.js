@@ -234,7 +234,7 @@ function openProviderDialog(detail, providers) {
     note.className = 'provider-note';
     note.textContent = meta.note;
     btn.append(name, note);
-    btn.addEventListener('click', () => startCheckout(id, detail, btn));
+    btn.addEventListener('click', () => (id === 'razorpay' ? startRazorpayCheckout(detail, btn) : startCheckout(id, detail, btn)));
     list.appendChild(btn);
   }
   $('providerDialog').showModal();
@@ -267,6 +267,67 @@ async function startCheckout(provider, detail, btn) {
     btn.disabled = false;
     name.textContent = original;
   }
+}
+
+function storeLicense(code, plan) {
+  try { localStorage.setItem('photoqr-license', JSON.stringify({ code, plan })); } catch {}
+}
+
+async function startRazorpayCheckout(detail, btn) {
+  const msg = $('providerMsg');
+  const name = btn.querySelector('.provider-name');
+  const original = name.textContent;
+  const fail = (text) => { if (!$('providerDialog').open) $('providerDialog').showModal(); msg.textContent = text; msg.hidden = false; btn.disabled = false; name.textContent = original; };
+  msg.hidden = true;
+  btn.disabled = true;
+  name.textContent = 'Opening checkout…';
+  let order;
+  try {
+    const res = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ planId: detail.planId, cycle: detail.billingCycle, country: detail.countryCode }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.order_id) { fail(data.error || 'Could not create the order. Try again.'); return; }
+    order = data;
+  } catch { fail('Could not reach checkout. Try again.'); return; }
+  if (typeof window.Razorpay !== 'function') { fail('The Razorpay checkout script did not load. Check your connection and try again.'); return; }
+  const rzp = new window.Razorpay({
+    key: order.key_id,
+    amount: order.amount,
+    currency: order.currency,
+    name: 'PhotoQR',
+    description: planPriceLabel(detail.planId, detail.currency, detail.billingCycle),
+    order_id: order.order_id,
+    theme: { color: '#3c684b' },
+    handler: async (response) => {
+      try {
+        const res = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.ok && data.code) {
+          storeLicense(data.code, data.plan);
+          window.location.assign('index.html#studio');
+          return;
+        }
+        fail(data.error || 'Payment could not be confirmed. Contact support with your payment ID.');
+      } catch { fail('Could not confirm the payment. Try again.'); }
+    },
+    modal: { ondismiss: () => fail('Payment cancelled.') },
+  });
+  rzp.on('payment.failed', (event) => fail(event.error && event.error.description ? event.error.description : 'Payment failed. Try another method.'));
+  $('providerDialog').close();
+  rzp.open();
+  btn.disabled = false;
+  name.textContent = original;
 }
 
 $('providerCancel').addEventListener('click', () => $('providerDialog').close());
