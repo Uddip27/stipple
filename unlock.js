@@ -1,4 +1,4 @@
-/* PhotoQR.io unlock page — claims a provider payment or accepts a license code. */
+/* PhotoQR unlock page — claims a provider payment or accepts a license code. */
 
 const $ = (id) => document.getElementById(id);
 const LICENSE_KEY = 'photoqr-license';

@@ -1,4 +1,4 @@
-/* PhotoQR.io — artistic QR engine + UI */
+/* PhotoQR — artistic QR engine + UI */
 'use strict';
 
 qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
@@ -284,7 +284,7 @@ function drawCreditStrip(ctx, px, h) {
   const fs = Math.round(h * 0.4);
   ctx.font = `600 ${fs}px Switzer, system-ui, sans-serif`;
   ctx.textBaseline = 'middle';
-  const label = 'PhotoQR.io';
+  const label = 'PhotoQR';
   const tw = ctx.measureText(label).width;
   const g = Math.round(h * 0.46);
   const gap = Math.round(h * 0.24);
@@ -1399,7 +1399,7 @@ const PLAN_LABELS = { pro: 'Creator Pro', business: 'Business & Agency', lifetim
 function syncLicenseUI() {
   $('licenseNote').textContent = state.unlocked
     ? `${PLAN_LABELS[state.plan] || 'Pro'} · clean exports, no credit`
-    : 'Free plan · exports carry a PhotoQR.io credit';
+    : 'Free plan · exports carry a PhotoQR credit';
   $('unlockBtn').hidden = state.unlocked;
 }
 

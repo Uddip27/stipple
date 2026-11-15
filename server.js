@@ -63,5 +63,5 @@ http.createServer((req, res) => {
   if (req.method === 'HEAD') { res.end(); return; }
   fs.createReadStream(filePath).pipe(res);
 }).listen(port, '127.0.0.1', () => {
-  console.log(`PhotoQR.io serving ${root} at http://127.0.0.1:${port}/`);
+  console.log(`PhotoQR serving ${root} at http://127.0.0.1:${port}/`);
 });

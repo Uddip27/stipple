@@ -1,4 +1,4 @@
-/* PhotoQR.io pricing — regional PPP tiers, detection and checkout hook. */
+/* PhotoQR pricing — regional PPP tiers, detection and checkout hook. */
 
 const $ = (id) => document.getElementById(id);
 const rootEl = document.documentElement;

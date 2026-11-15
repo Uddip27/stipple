@@ -1,4 +1,4 @@
-/* PhotoQR.io — shared pricing configuration (browser + server). */
+/* PhotoQR — shared pricing configuration (browser + server). */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.PHOTOQR_PRICING = factory();

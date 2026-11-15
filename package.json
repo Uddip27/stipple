@@ -1,8 +1,8 @@
 {
-  "name": "photoqr-io",
+  "name": "photoqr",
   "version": "1.0.0",
   "private": true,
-  "description": "PhotoQR.io — a browser-based press for artistic QR codes.",
+  "description": "PhotoQR — a browser-based press for artistic QR codes.",
   "scripts": {
     "start": "node server.js"
   }
