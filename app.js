@@ -272,6 +272,7 @@ let matrixText;
 let matrix;
 
 const CREDIT_RATIO = 0.055;
+const CREDIT_MATTE = '#dbeafe';
 function creditHeight(px, cfg) {
   return cfg.credit === false || cfg.unlocked ? 0 : Math.round(px * CREDIT_RATIO);
 }
@@ -342,7 +343,7 @@ function renderQR(canvas, cfg, px) {
   }
 
   const quiet = MARGIN * cell;
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = credit ? CREDIT_MATTE : '#ffffff';
   ctx.fillRect(0, 0, px, quiet);
   ctx.fillRect(0, px - quiet, px, quiet);
   ctx.fillRect(0, quiet, quiet, px - quiet * 2);
