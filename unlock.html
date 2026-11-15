@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="paper">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unlock — PhotoQR.io</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f5f7f6">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23F5F7F6'/%3E%3Crect x='5' y='5' width='12' height='12' rx='3' fill='none' stroke='%23202D28' stroke-width='2.2'/%3E%3Crect x='9' y='9' width='4' height='4' rx='1' fill='%23202D28'/%3E%3Ccircle cx='23' cy='23' r='3.4' fill='%233C684B'/%3E%3Ccircle cx='23' cy='15' r='1.5' fill='%23202D28'/%3E%3Ccircle cx='15' cy='23' r='1.5' fill='%23202D28'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="unlock-page">
+    <div class="unlock-card">
+      <a class="brand" href="index.html" aria-label="PhotoQR.io home">
+        <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect x="4" y="4" width="13" height="13" rx="3.4" stroke="currentColor" stroke-width="2.2"/>
+          <rect x="8.4" y="8.4" width="4.2" height="4.2" rx="1.2" fill="currentColor"/>
+          <circle cx="24" cy="24" r="3.6" fill="var(--accent)"/>
+          <circle cx="24" cy="15" r="1.7" fill="currentColor"/>
+          <circle cx="15" cy="24" r="1.7" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">PhotoQR.io</span>
+      </a>
+
+      <div class="claim-state" id="claimWorking">
+        <span class="claim-spinner" aria-hidden="true"></span>
+        <span>Confirming your payment…</span>
+      </div>
+
+      <div id="claimSuccess" hidden>
+        <div class="claim-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        </div>
+        <h2>You're unlocked.</h2>
+        <p class="claim-plan" id="claimPlan"></p>
+        <p class="lede">Your exports are now clean — no credit strip, exactly as you designed them. This unlock is saved on this device.</p>
+        <div class="claim-actions">
+          <a class="btn btn-primary" href="index.html#studio">Open the studio</a>
+        </div>
+      </div>
+
+      <div id="claimManual" hidden>
+        <h2>Enter your license code</h2>
+        <p class="lede" id="manualLede">Paste the code from your receipt to unlock clean exports on this device.</p>
+        <form class="claim-form" id="manualForm">
+          <label for="manualCode">License code</label>
+          <input id="manualCode" name="code" type="text" required autocomplete="off" spellcheck="false" placeholder="eyJwbGFu…">
+          <p class="claim-msg" id="manualMsg" role="alert" hidden></p>
+          <div class="claim-actions">
+            <button class="btn btn-primary" type="submit" id="manualSubmit">Unlock</button>
+          </div>
+        </form>
+        <p class="claim-foot">No code yet? <a href="pricing.html">See plans</a></p>
+      </div>
+    </div>
+  </main>
+  <script src="unlock.js"></script>
+</body>
+</html>

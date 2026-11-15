@@ -1,4 +1,4 @@
-/* StippleGIF classic worker. Bundled gifuct-js 2.1.2, gifenc 1.0.3 and js-binary-schema-parser 2.0.3. MIT license texts: gifuct-js.LICENSE.txt, gifenc.LICENSE.txt, js-binary-schema-parser.LICENSE.txt (same directory). No runtime imports or build step. */
+/* PhotoQRGIF classic worker. Bundled gifuct-js 2.1.2, gifenc 1.0.3 and js-binary-schema-parser 2.0.3. MIT license texts: gifuct-js.LICENSE.txt, gifenc.LICENSE.txt, js-binary-schema-parser.LICENSE.txt (same directory). No runtime imports or build step. */
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;

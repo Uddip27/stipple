@@ -66,7 +66,7 @@
 
       try {
         if (signal && signal.aborted) { finish(abortError()); return; }
-        worker = new Worker(workerURL, { type: 'classic', name: 'StippleGIF' });
+        worker = new Worker(workerURL, { type: 'classic', name: 'PhotoQRGIF' });
         worker.onerror = function (event) {
           event.preventDefault();
           finish(new Error('GIF worker failed: ' + (event.message || 'check that the local worker file can be loaded.')));
@@ -192,5 +192,5 @@
       });
   }
 
-  window.StippleGIF = Object.freeze({ decode: decode, encode: encode });
+  window.PhotoQRGIF = Object.freeze({ decode: decode, encode: encode });
 })();

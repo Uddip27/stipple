@@ -31,6 +31,22 @@ http.createServer((req, res) => {
   if (filePath !== root && !filePath.startsWith(root + path.sep)) {
     res.writeHead(403); res.end('Forbidden'); return;
   }
+  if (urlPath.startsWith('/api/')) {
+    const apiRoot = path.join(root, 'api');
+    const apiFile = path.resolve(apiRoot, '.' + urlPath.slice(4) + '.js');
+    if (!apiFile.startsWith(apiRoot + path.sep) || !fs.existsSync(apiFile)) {
+      res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end('{"ok":false,"reason":"not-found"}'); return;
+    }
+    Promise.resolve(require(apiFile)(req, res)).catch((err) => {
+      console.error(err);
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end('{"ok":false,"reason":"error"}');
+      }
+    });
+    return;
+  }
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
     filePath = path.join(filePath, 'index.html');
   }
@@ -47,5 +63,5 @@ http.createServer((req, res) => {
   if (req.method === 'HEAD') { res.end(); return; }
   fs.createReadStream(filePath).pipe(res);
 }).listen(port, '127.0.0.1', () => {
-  console.log(`Stipple serving ${root} at http://127.0.0.1:${port}/`);
+  console.log(`PhotoQR.io serving ${root} at http://127.0.0.1:${port}/`);
 });

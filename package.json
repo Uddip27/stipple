@@ -1,8 +1,8 @@
 {
-  "name": "stipple",
+  "name": "photoqr-io",
   "version": "1.0.0",
   "private": true,
-  "description": "Stipple — a browser-based press for artistic QR codes.",
+  "description": "PhotoQR.io — a browser-based press for artistic QR codes.",
   "scripts": {
     "start": "node server.js"
   }

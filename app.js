@@ -1,17 +1,17 @@
-/* Stipple — artistic QR engine + UI */
+/* PhotoQR.io — artistic QR engine + UI */
 'use strict';
 
 qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
 
 const SIZE = 1200;
 const MARGIN = 4;
-const SAMPLES = window.STIPPLE_SAMPLES;
+const SAMPLES = window.PHOTOQR_SAMPLES;
 const TAU = Math.PI * 2;
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 const FRAME_DELAY = 100;
 
 const DEFAULTS = {
-  text: 'https://stipple.studio',
+  text: 'https://photoqr.io',
   mode: 'watermark',
   dotScale: 0.38,
   dotStyle: 'circle',
@@ -60,6 +60,8 @@ const state = {
   gifSize: 600,
   playing: false,
   hasResult: false,
+  unlocked: false,
+  plan: null,
   zoom: 1,
   panX: 0,
   panY: 0,
@@ -268,6 +270,39 @@ function drawEye(ctx, x, y, cell, color) {
 
 let matrixText;
 let matrix;
+
+const CREDIT_RATIO = 0.055;
+function creditHeight(px, cfg) {
+  return cfg.credit === false || cfg.unlocked ? 0 : Math.round(px * CREDIT_RATIO);
+}
+
+function drawCreditStrip(ctx, px, h) {
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, px, px, h);
+  ctx.fillStyle = '#e2e8e3';
+  ctx.fillRect(0, px, px, Math.max(1, Math.round(h * 0.02)));
+  const fs = Math.round(h * 0.4);
+  ctx.font = `600 ${fs}px Switzer, system-ui, sans-serif`;
+  ctx.textBaseline = 'middle';
+  const label = 'PhotoQR.io';
+  const tw = ctx.measureText(label).width;
+  const g = Math.round(h * 0.46);
+  const gap = Math.round(h * 0.24);
+  const x0 = (px - (g + gap + tw)) / 2;
+  const cy = px + h / 2 + h * 0.02;
+  ctx.strokeStyle = '#3c684b';
+  ctx.lineWidth = Math.max(1.5, g * 0.14);
+  ctx.beginPath();
+  roundRectPath(ctx, x0, cy - g / 2, g, g, g * 0.26);
+  ctx.stroke();
+  ctx.fillStyle = '#3c684b';
+  ctx.beginPath();
+  roundRectPath(ctx, x0 + g * 0.3, cy - g * 0.2, g * 0.4, g * 0.4, g * 0.12);
+  ctx.fill();
+  ctx.fillStyle = '#1c2622';
+  ctx.fillText(label, x0 + g + gap, cy);
+}
+
 function renderQR(canvas, cfg, px) {
   if (matrixText !== cfg.text) {
     const next = qrcode(0, 'H');
@@ -280,8 +315,9 @@ function renderQR(canvas, cfg, px) {
   const n = qr.getModuleCount();
 
   const ctx = canvas.getContext('2d');
+  const credit = creditHeight(px, cfg);
   canvas.width = px;
-  canvas.height = px;
+  canvas.height = px + credit;
 
   const mode = cfg.mode || 'watermark';
   const isWatermark = mode === 'watermark';
@@ -377,6 +413,7 @@ function renderQR(canvas, cfg, px) {
   drawEye(ctx, MARGIN * cell, (MARGIN + n - 7) * cell, cell, cfg.finder);
 
   if (mode === 'logo') drawLogoCard(ctx, cfg, px);
+  if (credit) drawCreditStrip(ctx, px, credit);
 
   return { modules: n, version: (n - 17) / 4 };
 }
@@ -536,6 +573,8 @@ function renderMain() {
     const image = motionImage(state, previewTime(), previewSurface, SIZE);
     const info = renderQR(els.canvas, { ...state, text, image }, SIZE);
     els.qrMeta.textContent = `v${info.version} · ${info.modules}×${info.modules} modules · EC H (30%)`;
+    els.canvas.parentElement.classList.toggle('credited', !state.unlocked);
+    $('exportDims').textContent = `${els.canvas.width} × ${els.canvas.height}`;
     hideOverlay();
     setStatus('live', 'Live');
   } catch (err) {
@@ -623,7 +662,7 @@ async function handleFile(file) {
   try {
     if (file.type === 'image/gif') {
       toast('Opening GIF on your device…');
-      const animation = await StippleGIF.decode(file, { signal: controller.signal });
+      const animation = await PhotoQRGIF.decode(file, { signal: controller.signal });
       if (request !== imageRequest) return;
       const image = animation.frames[0].image;
       setImage(image, file.name, `${fmtSize(file.size)} · ${animation.frames.length} frames`, image.toDataURL(), null, animation);
@@ -711,7 +750,7 @@ function removeLogo(silent) {
   els.logoInput.value = '';
   if (!silent) {
     scheduleRender();
-    toast('Logo removed — Stipple seal restored');
+    toast('Logo removed — PhotoQR seal restored');
   }
 }
 
@@ -1137,14 +1176,15 @@ els.downloadBtn.addEventListener('click', async () => {
   if (state.format === 'png') {
     els.canvas.toBlob((blob) => {
       if (blob) {
-        saveBlob(blob, 'stipple-qr-1200.png');
-        toast('1200 × 1200 PNG downloaded');
+        saveBlob(blob, 'photoqr-1200.png');
+        toast(`${els.canvas.width} × ${els.canvas.height} PNG downloaded`);
       } else toast('Could not export this image. Try another background.', true);
     }, 'image/png');
     return;
   }
   const cfg = { ...state, text: state.text.trim(), dark: { ...state.dark }, light: { ...state.light } };
   const px = cfg.gifSize;
+  const gifHeight = px + creditHeight(px, cfg);
   const duration = loopDuration(cfg);
   const frameCount = Math.max(2, Math.ceil(duration / FRAME_DELAY));
   const delay = Math.max(20, Math.round(duration / frameCount / 10) * 10);
@@ -1159,19 +1199,19 @@ els.downloadBtn.addEventListener('click', async () => {
   $('exportProgressBar').value = 0;
   $('exportProgressText').textContent = 'Preparing animation…';
   try {
-    const blob = await StippleGIF.encode({
-      width: px, height: px, frameCount, delay, signal: controller.signal,
+    const blob = await PhotoQRGIF.encode({
+      width: px, height: gifHeight, frameCount, delay, signal: controller.signal,
       onFrame(index) {
         const image = motionImage(cfg, index * duration / frameCount, surface, px);
         renderQR(canvas, { ...cfg, image }, px);
-        return context.getImageData(0, 0, px, px);
+        return context.getImageData(0, 0, canvas.width, canvas.height);
       },
       onProgress(completed, total) {
         $('exportProgressBar').value = completed / total * 100;
         $('exportProgressText').textContent = `Making your GIF · ${completed} / ${total} frames`;
       },
     });
-    saveBlob(blob, `stipple-qr-${px}.gif`);
+    saveBlob(blob, `photoqr-${px}.gif`);
     toast(`Looping GIF downloaded · ${fmtSize(blob.size)}`);
   } catch (error) {
     toast(error.name === 'AbortError' ? 'GIF export cancelled' : error.message || 'Could not export GIF', error.name !== 'AbortError');
@@ -1260,10 +1300,10 @@ $$('[data-use-preset]').forEach((btn) => {
 const rootEl = document.documentElement;
 function setTheme(theme) {
   rootEl.dataset.theme = theme;
-  try { localStorage.setItem('stipple-theme', theme); } catch {}
+  try { localStorage.setItem('photoqr-theme', theme); } catch {}
 }
 try {
-  setTheme(localStorage.getItem('stipple-theme') || 'paper');
+  setTheme(localStorage.getItem('photoqr-theme') || 'paper');
 } catch {
   setTheme('paper');
 }
@@ -1345,11 +1385,94 @@ async function renderShowcases() {
       const p = PRESETS[cv.dataset.preset];
       const sample = SAMPLES.find((s) => s.id === p.sampleId);
       decodeImage(sample.src).then((img) => {
-        renderQR(cv, { ...DEFAULTS, ...p, image: img }, parseInt(cv.dataset.size, 10) || 420);
+        renderQR(cv, { ...DEFAULTS, ...p, image: img, credit: false }, parseInt(cv.dataset.size, 10) || 420);
       });
     });
   } catch { /* hero cards stay empty only if samples fail */ }
 }
+
+/* ---------------- license / unlock ---------------- */
+
+const LICENSE_KEY = 'photoqr-license';
+const PLAN_LABELS = { pro: 'Creator Pro', business: 'Business & Agency', lifetime: 'Lifetime Pass' };
+
+function syncLicenseUI() {
+  $('licenseNote').textContent = state.unlocked
+    ? `${PLAN_LABELS[state.plan] || 'Pro'} · clean exports, no credit`
+    : 'Free plan · exports carry a PhotoQR.io credit';
+  $('unlockBtn').hidden = state.unlocked;
+}
+
+function applyLicense(plan) {
+  state.unlocked = true;
+  state.plan = plan || 'pro';
+  syncLicenseUI();
+  renderMain();
+}
+
+async function verifyLicense(code) {
+  const res = await fetch('/api/license/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+  if (!res.ok) throw new Error('verify unavailable');
+  return res.json();
+}
+
+function storeLicense(code, plan) {
+  try { localStorage.setItem(LICENSE_KEY, JSON.stringify({ code, plan })); } catch { /* private mode */ }
+}
+
+function readLicense() {
+  try { return JSON.parse(localStorage.getItem(LICENSE_KEY)); } catch { return null; }
+}
+
+function clearLicense() {
+  try { localStorage.removeItem(LICENSE_KEY); } catch { /* private mode */ }
+  state.unlocked = false;
+  state.plan = null;
+  syncLicenseUI();
+  renderMain();
+}
+
+const unlockDialog = $('unlockDialog');
+$('unlockBtn').addEventListener('click', () => {
+  $('unlockMsg').hidden = true;
+  $('licenseCode').value = '';
+  unlockDialog.showModal();
+  $('licenseCode').focus();
+});
+$('unlockCancel').addEventListener('click', () => unlockDialog.close());
+$('unlockForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const code = $('licenseCode').value.trim();
+  if (!code) return;
+  const btn = $('unlockSubmit');
+  const msg = $('unlockMsg');
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  try {
+    const result = await verifyLicense(code);
+    if (result.ok) {
+      storeLicense(code, result.plan);
+      applyLicense(result.plan);
+      unlockDialog.close();
+      toast('Unlocked — your exports are now clean');
+    } else {
+      msg.textContent = result.reason === 'not-configured'
+        ? 'Unlocking is not live yet. Checkout opens soon.'
+        : 'That code is not valid. Check your receipt and try again.';
+      msg.hidden = false;
+    }
+  } catch {
+    msg.textContent = 'Could not reach the verification service. Try again.';
+    msg.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Unlock';
+  }
+});
 
 /* ---------------- boot ---------------- */
 
@@ -1363,6 +1486,17 @@ $$('[data-photo]').forEach((img) => {
   const sample = SAMPLES.find((item) => item.id === img.dataset.photo);
   if (sample) img.src = sample.src;
 });
+
+syncLicenseUI();
+const storedLicense = readLicense();
+if (storedLicense && storedLicense.code) {
+  verifyLicense(storedLicense.code)
+    .then((r) => {
+      if (r.ok || r.reason === 'not-configured') applyLicense(storedLicense.plan);
+      else clearLicense();
+    })
+    .catch(() => applyLicense(storedLicense.plan));
+}
 
 syncUI();
 loadSample(DEFAULTS.sampleId, true).then(renderMain);
