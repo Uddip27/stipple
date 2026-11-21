@@ -179,7 +179,7 @@ function setCycle(cycle) {
 const PROVIDER_LABELS = {
   lemonsqueezy: { name: 'Lemon Squeezy', note: 'Card · PayPal' },
   stripe: { name: 'Stripe', note: 'Card · Apple Pay · Google Pay' },
-  razorpay: { name: 'Razorpay', note: 'UPI · Cards · Netbanking' },
+  razorpay: { name: 'Razorpay', note: 'UPI · Cards · Netbanking · INR' },
   dodo: { name: 'Dodo Payments', note: 'Card · local methods' },
 };
 
@@ -201,6 +201,15 @@ function planPriceLabel(planId, currency, billingCycle) {
   return `${PLAN_NAMES[planId]} · ${price}${suffix}`;
 }
 
+/* Razorpay settles in INR, so show the INR tier price regardless of displayed region. */
+function inrPriceLabel(planId, billingCycle) {
+  const price = window.PHOTOQR_PRICING.priceFor('IN', planId, billingCycle);
+  const shown = planId === 'lifetime' ? price.amount : (billingCycle === 'yearly' ? price.amount / 12 : price.amount);
+  const amount = `₹${shown.toLocaleString('en-IN')}`;
+  const suffix = planId === 'lifetime' ? ' one-time' : billingCycle === 'yearly' ? '/mo · billed yearly' : '/mo';
+  return `${PLAN_NAMES[planId]} · ${amount}${suffix}`;
+}
+
 async function onSelectPlan(planId, currency, billingCycle, countryCode) {
   const detail = { planId, currency, billingCycle, countryCode };
   window.dispatchEvent(new CustomEvent('photoqr:select-plan', { detail }));
@@ -209,7 +218,7 @@ async function onSelectPlan(planId, currency, billingCycle, countryCode) {
     return;
   }
   const cfg = await loadProviderConfig();
-  const available = (cfg.providers || []).filter((id) => id !== 'razorpay' || currency === 'INR');
+  const available = cfg.providers || [];
   if (!available.length) {
     toast(`${planPriceLabel(planId, currency, billingCycle)} — checkout opens soon.`);
     return;
@@ -218,7 +227,9 @@ async function onSelectPlan(planId, currency, billingCycle, countryCode) {
 }
 
 function openProviderDialog(detail, providers) {
-  $('providerSummary').textContent = planPriceLabel(detail.planId, detail.currency, detail.billingCycle);
+  $('providerSummary').textContent = providers.includes('razorpay')
+    ? inrPriceLabel(detail.planId, detail.billingCycle)
+    : planPriceLabel(detail.planId, detail.currency, detail.billingCycle);
   const list = $('providerList');
   list.innerHTML = '';
   $('providerMsg').hidden = true;
@@ -298,7 +309,7 @@ async function startRazorpayCheckout(detail, btn) {
     amount: order.amount,
     currency: order.currency,
     name: 'PhotoQR',
-    description: planPriceLabel(detail.planId, detail.currency, detail.billingCycle),
+    description: inrPriceLabel(detail.planId, detail.billingCycle),
     order_id: order.order_id,
     theme: { color: '#3c684b' },
     handler: async (response) => {

@@ -5,11 +5,14 @@ const { enabledProviders, priceFor, createRazorpayOrder } = require('../lib/prov
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'method' });
   if (!enabledProviders().includes('razorpay')) return json(res, 400, { ok: false, error: 'Razorpay is not configured yet.' });
+  /* Never charge a customer when we cannot sign their unlock code afterwards. */
+  if (!process.env.LICENSE_SECRET) return json(res, 400, { ok: false, error: 'Unlock is not configured yet. Contact support.' });
   let body;
   try { body = await readBody(req); }
   catch { return json(res, 400, { ok: false, error: 'Invalid request.' }); }
-  const { planId, cycle, country } = body || {};
-  const price = priceFor(country, planId, cycle);
+  const { planId, cycle } = body || {};
+  /* Razorpay settles in INR only, so price every Razorpay order from the INR tier. */
+  const price = priceFor('IN', planId, cycle);
   if (!price) return json(res, 400, { ok: false, error: 'Unknown plan.' });
   if (price.currency !== 'INR') return json(res, 400, { ok: false, error: 'Razorpay is available for INR only.' });
   if (price.minor < 100) return json(res, 400, { ok: false, error: 'Amount below the Razorpay minimum of 100 paise.' });
