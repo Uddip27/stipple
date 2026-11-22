@@ -16,7 +16,6 @@ const DEFAULTS = {
   dotScale: 0.38,
   dotStyle: 'circle',
   colorType: 'solid',
-  transparent: false,
   gradAngle: 45,
   gradEnd: '#e8431f',
   logoInset: 22,
@@ -87,7 +86,7 @@ const els = {
   darkHex: $('darkHex'), darkAlpha: $('darkAlpha'), darkValue: $('darkValue'), darkSwatch: $('darkSwatch'),
   lightHex: $('lightHex'), lightAlpha: $('lightAlpha'), lightValue: $('lightValue'), lightSwatch: $('lightSwatch'),
   finderHex: $('finderHex'), finderValue: $('finderValue'), finderSwatch: $('finderSwatch'),
-  overlay: $('overlay'), overlayValue: $('overlayValue'), transparentBtn: $('transparentBtn'),
+  overlay: $('overlay'), overlayValue: $('overlayValue'),
   statusPill: $('statusPill'), statusText: $('statusText'),
   canvasOverlay: $('canvasOverlay'), overlayMsg: $('overlayMsg'),
   qrMeta: $('qrMeta'),
@@ -323,7 +322,6 @@ function renderQR(canvas, cfg, px) {
 
   const mode = cfg.mode || 'watermark';
   const isWatermark = mode === 'watermark';
-  const transparent = !!cfg.transparent;
   const cell = px / (n + MARGIN * 2);
 
   if (isWatermark && cfg.image) {
@@ -333,9 +331,6 @@ function renderQR(canvas, cfg, px) {
       ctx.fillStyle = cfg.overlay > 0 ? `rgba(255, 255, 255, ${a})` : `rgba(2, 6, 23, ${a})`;
       ctx.fillRect(0, 0, px, px);
     }
-  } else if (transparent) {
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, px, px);
   } else if (isWatermark) {
     const g = ctx.createLinearGradient(0, 0, px, px);
     g.addColorStop(0, '#ffffff');
@@ -348,13 +343,11 @@ function renderQR(canvas, cfg, px) {
   }
 
   const quiet = MARGIN * cell;
-  if (!(transparent && cfg.image)) {
-    ctx.fillStyle = credit ? CREDIT_MATTE : '#ffffff';
-    ctx.fillRect(0, 0, px, quiet);
-    ctx.fillRect(0, px - quiet, px, quiet);
-    ctx.fillRect(0, quiet, quiet, px - quiet * 2);
-    ctx.fillRect(px - quiet, quiet, quiet, px - quiet * 2);
-  }
+  ctx.fillStyle = credit ? CREDIT_MATTE : '#ffffff';
+  ctx.fillRect(0, 0, px, quiet);
+  ctx.fillRect(0, px - quiet, px, quiet);
+  ctx.fillRect(0, quiet, quiet, px - quiet * 2);
+  ctx.fillRect(px - quiet, quiet, quiet, px - quiet * 2);
 
   const lum = mode === 'halftone' && cfg.image ? sampleLuminance(cfg.image, n, cfg) : null;
   const ink = makeInk(ctx, cfg, px, isWatermark && cfg.colorType === 'solid' ? cfg.dark.alpha : 1);
@@ -364,7 +357,7 @@ function renderQR(canvas, cfg, px) {
   const cxOf = (c) => (MARGIN + c + 0.5) * cell;
   const cyOf = (r) => (MARGIN + r + 0.5) * cell;
 
-  if (cfg.dotStyle === 'lines' && mode !== 'halftone' && !transparent) {
+  if (cfg.dotStyle === 'lines' && mode !== 'halftone') {
     const dark = new Uint8Array(n * n);
     const used = new Uint8Array(n * n);
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!inFinder(r, c) && qr.isDark(r, c)) dark[r * n + c] = 1;
@@ -394,12 +387,6 @@ function renderQR(canvas, cfg, px) {
       for (let c = 0; c < n; c++) {
         if (inFinder(r, c)) continue;
         const isDark = qr.isDark(r, c);
-        if (transparent) {
-          if (isDark) continue;
-          ctx.fillStyle = '#ffffff';
-          drawDot(ctx, cxOf(c), cyOf(r), d, shape);
-          continue;
-        }
         if (mode === 'halftone') {
           if (!isDark) continue;
           let dd = d;
@@ -411,7 +398,6 @@ function renderQR(canvas, cfg, px) {
           ctx.fillStyle = ink;
           drawDot(ctx, cxOf(c), cyOf(r), dd, shape);
         } else if (isWatermark) {
-          if (transparent && !isDark) continue;
           ctx.fillStyle = isDark ? ink : light;
           drawDot(ctx, cxOf(c), cyOf(r), d, shape);
         } else {
@@ -529,8 +515,7 @@ function syncMotionUI() {
   $('playbackInfo').textContent = `${Number((loopDuration() / 1000).toFixed(2))} second loop`;
   $('gifSizeRow').hidden = state.format !== 'gif';
   $('gifSize').value = String(state.gifSize);
-  $('exportHint').textContent = state.format === 'png'
-    ? (state.transparent ? 'Black modules removed — white dots on your photo.' : 'A high-resolution still. Ready for print.') :
+  $('exportHint').textContent = state.format === 'png' ? 'A high-resolution still. Ready for print.' :
     !available ? 'Choose Watermark or Halftone in Style and add a background in Content.' :
     !animated ? 'Choose Breathe, Drift, or Your GIF in the Motion tab first.' :
     'A looping GIF at 10 frames per second. Made for screens.';
@@ -914,14 +899,6 @@ function syncUI() {
   els.overlayBlock.hidden = !isWatermark;
   els.lightRow.hidden = !isWatermark;
   els.darkAlpha.hidden = !isWatermark || state.colorType !== 'solid';
-
-  const transparentOn = !!state.transparent;
-  els.transparentBtn.disabled = false;
-  els.transparentBtn.classList.toggle('active', transparentOn);
-  els.transparentBtn.setAttribute('aria-pressed', String(transparentOn));
-  els.transparentBtn.querySelector('.transparent-state').textContent = transparentOn ? 'On' : 'Off';
-  els.transparentBtn.title = 'Black QR modules are removed — white dots stay on your photo';
-
   els.dotScaleLabel.textContent = isWatermark ? 'Dot size / image visibility' : 'Dot size / module scale';
   els.dotScaleEnds.children[0].textContent = isWatermark ? 'More photo' : 'Finer';
   els.dotScaleEnds.children[1].textContent = isWatermark ? 'Bolder code' : 'Bolder';
@@ -950,7 +927,6 @@ function applyConfig(cfg) {
   state.dotScale = cfg.dotScale;
   state.dotStyle = cfg.dotStyle;
   state.colorType = cfg.colorType || DEFAULTS.colorType;
-  state.transparent = cfg.transparent ?? DEFAULTS.transparent;
   state.gradAngle = cfg.gradAngle ?? DEFAULTS.gradAngle;
   state.gradEnd = cfg.gradEnd || DEFAULTS.gradEnd;
   state.logoInset = cfg.logoInset ?? DEFAULTS.logoInset;
@@ -1074,13 +1050,6 @@ els.darkAlpha.addEventListener('input', () => { state.dark.alpha = els.darkAlpha
 els.lightHex.addEventListener('input', () => { state.light.hex = els.lightHex.value; syncColorUI(); scheduleRender(); });
 els.lightAlpha.addEventListener('input', () => { state.light.alpha = els.lightAlpha.value / 100; syncColorUI(); scheduleRender(); });
 els.finderHex.addEventListener('input', () => { state.finder = els.finderHex.value; syncColorUI(); scheduleRender(); });
-
-els.transparentBtn.addEventListener('click', () => {
-  state.transparent = !state.transparent;
-  if (state.transparent && state.format === 'gif') state.format = 'png';
-  syncUI();
-  scheduleRender();
-});
 
 els.overlay.addEventListener('input', () => {
   state.overlay = parseInt(els.overlay.value, 10);

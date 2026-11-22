@@ -149,11 +149,6 @@ textarea::placeholder { color:var(--faint); }
 .mode-btn { display:flex; gap:9px; align-items:center; padding:12px; background:var(--paper); border:1px solid transparent; border-radius:7px; font-size:12px; }
 .mode-btn svg { width:17px; height:17px; flex:none; }
 .mode-btn.active { border-color:var(--accent); background:var(--accent-soft); color:var(--accent-deep); }
-.transparent-toggle { width:100%; justify-content:flex-start; margin-bottom:13px; }
-.transparent-toggle .transparent-icon { font-size:16px; line-height:1; color:var(--muted); }
-.transparent-toggle .transparent-state { margin-left:auto; font-size:10px; color:var(--muted); }
-.transparent-toggle.active .transparent-icon, .transparent-toggle.active .transparent-state { color:var(--accent-deep); }
-.transparent-toggle:disabled { opacity:.45; cursor:not-allowed; }
 .mode-note { color:var(--muted); font-size:11px; margin:13px 0 24px; }
 .slider-block { margin-bottom:23px; }
 .slider-block:last-child { margin-bottom:0; }
