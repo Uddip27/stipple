@@ -16,6 +16,7 @@ const DEFAULTS = {
   dotScale: 0.38,
   dotStyle: 'circle',
   colorType: 'solid',
+  transparent: false,
   gradAngle: 45,
   gradEnd: '#e8431f',
   logoInset: 22,
@@ -86,7 +87,7 @@ const els = {
   darkHex: $('darkHex'), darkAlpha: $('darkAlpha'), darkValue: $('darkValue'), darkSwatch: $('darkSwatch'),
   lightHex: $('lightHex'), lightAlpha: $('lightAlpha'), lightValue: $('lightValue'), lightSwatch: $('lightSwatch'),
   finderHex: $('finderHex'), finderValue: $('finderValue'), finderSwatch: $('finderSwatch'),
-  overlay: $('overlay'), overlayValue: $('overlayValue'),
+  overlay: $('overlay'), overlayValue: $('overlayValue'), transparentBtn: $('transparentBtn'),
   statusPill: $('statusPill'), statusText: $('statusText'),
   canvasOverlay: $('canvasOverlay'), overlayMsg: $('overlayMsg'),
   qrMeta: $('qrMeta'),
@@ -268,6 +269,28 @@ function drawEye(ctx, x, y, cell, color) {
   ctx.fill();
 }
 
+/* Finder pattern for transparent-ink mode: only the light ring is painted;
+   the dark border and centre stay clear and read dark on a dark surface. */
+function drawEyeCutout(ctx, x, y, cell) {
+  const s = 7 * cell;
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  roundRectPath(ctx, x, y, s, s, cell * 1.4);
+  ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  roundRectPath(ctx, x + cell, y + cell, s - 2 * cell, s - 2 * cell, cell * 0.9);
+  ctx.fill();
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  roundRectPath(ctx, x + 2 * cell, y + 2 * cell, 3 * cell, 3 * cell, cell * 0.75);
+  ctx.fill();
+  ctx.restore();
+}
+
 let matrixText;
 let matrix;
 
@@ -277,9 +300,11 @@ function creditHeight(px, cfg) {
   return cfg.credit === false || cfg.unlocked ? 0 : Math.round(px * CREDIT_RATIO);
 }
 
-function drawCreditStrip(ctx, px, h) {
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, px, px, h);
+function drawCreditStrip(ctx, px, h, cfg) {
+  if (!(cfg && cfg.transparent)) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, px, px, h);
+  }
   ctx.fillStyle = '#e2e8e3';
   ctx.fillRect(0, px, px, Math.max(1, Math.round(h * 0.02)));
   const fs = Math.round(h * 0.4);
@@ -322,6 +347,7 @@ function renderQR(canvas, cfg, px) {
 
   const mode = cfg.mode || 'watermark';
   const isWatermark = mode === 'watermark';
+  const transparent = !!cfg.transparent;
   const cell = px / (n + MARGIN * 2);
 
   if (isWatermark && cfg.image) {
@@ -331,33 +357,40 @@ function renderQR(canvas, cfg, px) {
       ctx.fillStyle = cfg.overlay > 0 ? `rgba(255, 255, 255, ${a})` : `rgba(2, 6, 23, ${a})`;
       ctx.fillRect(0, 0, px, px);
     }
-  } else if (isWatermark) {
+  } else if (!transparent && isWatermark) {
     const g = ctx.createLinearGradient(0, 0, px, px);
     g.addColorStop(0, '#ffffff');
     g.addColorStop(1, '#d7e0ec');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, px, px);
-  } else {
+  } else if (!transparent) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, px, px);
   }
 
   const quiet = MARGIN * cell;
-  ctx.fillStyle = credit ? CREDIT_MATTE : '#ffffff';
-  ctx.fillRect(0, 0, px, quiet);
-  ctx.fillRect(0, px - quiet, px, quiet);
-  ctx.fillRect(0, quiet, quiet, px - quiet * 2);
-  ctx.fillRect(px - quiet, quiet, quiet, px - quiet * 2);
+  if (!transparent) {
+    ctx.fillStyle = credit ? CREDIT_MATTE : '#ffffff';
+    ctx.fillRect(0, 0, px, quiet);
+    ctx.fillRect(0, px - quiet, px, quiet);
+    ctx.fillRect(0, quiet, quiet, px - quiet * 2);
+    ctx.fillRect(px - quiet, quiet, quiet, px - quiet * 2);
+  } else {
+    ctx.clearRect(0, 0, px, quiet);
+    ctx.clearRect(0, px - quiet, px, quiet);
+    ctx.clearRect(0, quiet, quiet, px - quiet * 2);
+    ctx.clearRect(px - quiet, quiet, quiet, px - quiet * 2);
+  }
 
   const lum = mode === 'halftone' && cfg.image ? sampleLuminance(cfg.image, n, cfg) : null;
-  const ink = makeInk(ctx, cfg, px, isWatermark && cfg.colorType === 'solid' ? cfg.dark.alpha : 1);
+  const ink = makeInk(ctx, cfg, px, isWatermark && !transparent && cfg.colorType === 'solid' ? cfg.dark.alpha : 1);
   const light = rgba(cfg.light.hex, cfg.light.alpha);
   const d = cell * cfg.dotScale;
   const inFinder = (r, c) => (r < 8 && c < 8) || (r < 8 && c >= n - 8) || (r >= n - 8 && c < 8);
   const cxOf = (c) => (MARGIN + c + 0.5) * cell;
   const cyOf = (r) => (MARGIN + r + 0.5) * cell;
 
-  if (cfg.dotStyle === 'lines' && mode !== 'halftone') {
+  if (cfg.dotStyle === 'lines' && mode !== 'halftone' && !transparent) {
     const dark = new Uint8Array(n * n);
     const used = new Uint8Array(n * n);
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!inFinder(r, c) && qr.isDark(r, c)) dark[r * n + c] = 1;
@@ -387,6 +420,13 @@ function renderQR(canvas, cfg, px) {
       for (let c = 0; c < n; c++) {
         if (inFinder(r, c)) continue;
         const isDark = qr.isDark(r, c);
+        if (transparent) {
+          const x = (MARGIN + c) * cell;
+          const y = (MARGIN + r) * cell;
+          if (isDark) ctx.clearRect(x - 0.3, y - 0.3, cell + 0.6, cell + 0.6);
+          else { ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, cell + 0.6, cell + 0.6); }
+          continue;
+        }
         if (mode === 'halftone') {
           if (!isDark) continue;
           let dd = d;
@@ -398,6 +438,7 @@ function renderQR(canvas, cfg, px) {
           ctx.fillStyle = ink;
           drawDot(ctx, cxOf(c), cyOf(r), dd, shape);
         } else if (isWatermark) {
+          if (transparent && !isDark) continue;
           ctx.fillStyle = isDark ? ink : light;
           drawDot(ctx, cxOf(c), cyOf(r), d, shape);
         } else {
@@ -409,12 +450,13 @@ function renderQR(canvas, cfg, px) {
     }
   }
 
-  drawEye(ctx, MARGIN * cell, MARGIN * cell, cell, cfg.finder);
-  drawEye(ctx, (MARGIN + n - 7) * cell, MARGIN * cell, cell, cfg.finder);
-  drawEye(ctx, MARGIN * cell, (MARGIN + n - 7) * cell, cell, cfg.finder);
+  const eye = (x, y) => transparent ? drawEyeCutout(ctx, x, y, cell) : drawEye(ctx, x, y, cell, cfg.finder);
+  eye(MARGIN * cell, MARGIN * cell);
+  eye((MARGIN + n - 7) * cell, MARGIN * cell);
+  eye(MARGIN * cell, (MARGIN + n - 7) * cell);
 
   if (mode === 'logo') drawLogoCard(ctx, cfg, px);
-  if (credit) drawCreditStrip(ctx, px, credit);
+  if (credit) drawCreditStrip(ctx, px, credit, cfg);
 
   return { modules: n, version: (n - 17) / 4 };
 }
@@ -498,6 +540,8 @@ function syncMotionUI() {
   const animated = hasMotion();
   syncSegmented('#motionType', 'motion', state.motion);
   syncSegmented('#exportFormat', 'format', state.format);
+  const gifButton = document.querySelector('#exportFormat button[data-format="gif"]');
+  if (gifButton) gifButton.disabled = !!state.transparent;
   $$('#motionType button').forEach((button) => {
     button.disabled = button.dataset.motion !== 'still' && (!available ||
       (button.dataset.motion === 'source' && !(state.animation?.frames.length > 1)));
@@ -515,7 +559,8 @@ function syncMotionUI() {
   $('playbackInfo').textContent = `${Number((loopDuration() / 1000).toFixed(2))} second loop`;
   $('gifSizeRow').hidden = state.format !== 'gif';
   $('gifSize').value = String(state.gifSize);
-  $('exportHint').textContent = state.format === 'png' ? 'A high-resolution still. Ready for print.' :
+  $('exportHint').textContent = state.format === 'png'
+    ? (state.transparent ? 'Transparent ink PNG — place it on a dark surface to scan.' : 'A high-resolution still. Ready for print.') :
     !available ? 'Choose Watermark or Halftone in Style and add a background in Content.' :
     !animated ? 'Choose Breathe, Drift, or Your GIF in the Motion tab first.' :
     'A looping GIF at 10 frames per second. Made for screens.';
@@ -899,6 +944,15 @@ function syncUI() {
   els.overlayBlock.hidden = !isWatermark;
   els.lightRow.hidden = !isWatermark;
   els.darkAlpha.hidden = !isWatermark || state.colorType !== 'solid';
+
+  const transparentOn = !!state.transparent;
+  els.transparentBtn.disabled = false;
+  els.transparentBtn.classList.toggle('active', transparentOn);
+  els.transparentBtn.setAttribute('aria-pressed', String(transparentOn));
+  els.transparentBtn.querySelector('.transparent-state').textContent = transparentOn ? 'On' : 'Off';
+  els.transparentBtn.title = 'Black modules become clear; white modules stay solid. Place on a dark surface to scan.';
+  els.canvas.parentElement.classList.toggle('transparent', transparentOn);
+
   els.dotScaleLabel.textContent = isWatermark ? 'Dot size / image visibility' : 'Dot size / module scale';
   els.dotScaleEnds.children[0].textContent = isWatermark ? 'More photo' : 'Finer';
   els.dotScaleEnds.children[1].textContent = isWatermark ? 'Bolder code' : 'Bolder';
@@ -927,6 +981,7 @@ function applyConfig(cfg) {
   state.dotScale = cfg.dotScale;
   state.dotStyle = cfg.dotStyle;
   state.colorType = cfg.colorType || DEFAULTS.colorType;
+  state.transparent = cfg.transparent ?? DEFAULTS.transparent;
   state.gradAngle = cfg.gradAngle ?? DEFAULTS.gradAngle;
   state.gradEnd = cfg.gradEnd || DEFAULTS.gradEnd;
   state.logoInset = cfg.logoInset ?? DEFAULTS.logoInset;
@@ -1050,6 +1105,13 @@ els.darkAlpha.addEventListener('input', () => { state.dark.alpha = els.darkAlpha
 els.lightHex.addEventListener('input', () => { state.light.hex = els.lightHex.value; syncColorUI(); scheduleRender(); });
 els.lightAlpha.addEventListener('input', () => { state.light.alpha = els.lightAlpha.value / 100; syncColorUI(); scheduleRender(); });
 els.finderHex.addEventListener('input', () => { state.finder = els.finderHex.value; syncColorUI(); scheduleRender(); });
+
+els.transparentBtn.addEventListener('click', () => {
+  state.transparent = !state.transparent;
+  if (state.transparent && state.format === 'gif') state.format = 'png';
+  syncUI();
+  scheduleRender();
+});
 
 els.overlay.addEventListener('input', () => {
   state.overlay = parseInt(els.overlay.value, 10);
@@ -1248,6 +1310,10 @@ $('playPauseBtn').addEventListener('click', () => {
 });
 $$('#exportFormat button').forEach((button) => {
   button.addEventListener('click', () => {
+    if (button.dataset.format === 'gif' && state.transparent) {
+      toast('GIF needs solid black ink. Turn transparency off first.', true);
+      return;
+    }
     state.format = button.dataset.format;
     syncMotionUI();
     if (state.format === 'gif' && !hasMotion()) selectEditorTab('motion');
