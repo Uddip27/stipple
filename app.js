@@ -269,28 +269,6 @@ function drawEye(ctx, x, y, cell, color) {
   ctx.fill();
 }
 
-/* Finder pattern for transparent-ink mode: only the light ring is painted;
-   the dark border and centre stay clear and read dark on a dark surface. */
-function drawEyeCutout(ctx, x, y, cell) {
-  const s = 7 * cell;
-  ctx.save();
-  ctx.globalCompositeOperation = 'destination-out';
-  ctx.beginPath();
-  roundRectPath(ctx, x, y, s, s, cell * 1.4);
-  ctx.fill();
-  ctx.restore();
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  roundRectPath(ctx, x + cell, y + cell, s - 2 * cell, s - 2 * cell, cell * 0.9);
-  ctx.fill();
-  ctx.save();
-  ctx.globalCompositeOperation = 'destination-out';
-  ctx.beginPath();
-  roundRectPath(ctx, x + 2 * cell, y + 2 * cell, 3 * cell, 3 * cell, cell * 0.75);
-  ctx.fill();
-  ctx.restore();
-}
-
 let matrixText;
 let matrix;
 
@@ -300,11 +278,9 @@ function creditHeight(px, cfg) {
   return cfg.credit === false || cfg.unlocked ? 0 : Math.round(px * CREDIT_RATIO);
 }
 
-function drawCreditStrip(ctx, px, h, cfg) {
-  if (!(cfg && cfg.transparent)) {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, px, px, h);
-  }
+function drawCreditStrip(ctx, px, h) {
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, px, px, h);
   ctx.fillStyle = '#e2e8e3';
   ctx.fillRect(0, px, px, Math.max(1, Math.round(h * 0.02)));
   const fs = Math.round(h * 0.4);
@@ -357,33 +333,31 @@ function renderQR(canvas, cfg, px) {
       ctx.fillStyle = cfg.overlay > 0 ? `rgba(255, 255, 255, ${a})` : `rgba(2, 6, 23, ${a})`;
       ctx.fillRect(0, 0, px, px);
     }
-  } else if (!transparent && isWatermark) {
+  } else if (transparent) {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, px, px);
+  } else if (isWatermark) {
     const g = ctx.createLinearGradient(0, 0, px, px);
     g.addColorStop(0, '#ffffff');
     g.addColorStop(1, '#d7e0ec');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, px, px);
-  } else if (!transparent) {
+  } else {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, px, px);
   }
 
   const quiet = MARGIN * cell;
-  if (!transparent) {
+  if (!(transparent && cfg.image)) {
     ctx.fillStyle = credit ? CREDIT_MATTE : '#ffffff';
     ctx.fillRect(0, 0, px, quiet);
     ctx.fillRect(0, px - quiet, px, quiet);
     ctx.fillRect(0, quiet, quiet, px - quiet * 2);
     ctx.fillRect(px - quiet, quiet, quiet, px - quiet * 2);
-  } else {
-    ctx.clearRect(0, 0, px, quiet);
-    ctx.clearRect(0, px - quiet, px, quiet);
-    ctx.clearRect(0, quiet, quiet, px - quiet * 2);
-    ctx.clearRect(px - quiet, quiet, quiet, px - quiet * 2);
   }
 
   const lum = mode === 'halftone' && cfg.image ? sampleLuminance(cfg.image, n, cfg) : null;
-  const ink = makeInk(ctx, cfg, px, isWatermark && !transparent && cfg.colorType === 'solid' ? cfg.dark.alpha : 1);
+  const ink = makeInk(ctx, cfg, px, isWatermark && cfg.colorType === 'solid' ? cfg.dark.alpha : 1);
   const light = rgba(cfg.light.hex, cfg.light.alpha);
   const d = cell * cfg.dotScale;
   const inFinder = (r, c) => (r < 8 && c < 8) || (r < 8 && c >= n - 8) || (r >= n - 8 && c < 8);
@@ -421,10 +395,9 @@ function renderQR(canvas, cfg, px) {
         if (inFinder(r, c)) continue;
         const isDark = qr.isDark(r, c);
         if (transparent) {
-          const x = (MARGIN + c) * cell;
-          const y = (MARGIN + r) * cell;
-          if (isDark) ctx.clearRect(x - 0.3, y - 0.3, cell + 0.6, cell + 0.6);
-          else { ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, cell + 0.6, cell + 0.6); }
+          if (isDark) continue;
+          ctx.fillStyle = '#ffffff';
+          drawDot(ctx, cxOf(c), cyOf(r), d, shape);
           continue;
         }
         if (mode === 'halftone') {
@@ -450,13 +423,12 @@ function renderQR(canvas, cfg, px) {
     }
   }
 
-  const eye = (x, y) => transparent ? drawEyeCutout(ctx, x, y, cell) : drawEye(ctx, x, y, cell, cfg.finder);
-  eye(MARGIN * cell, MARGIN * cell);
-  eye((MARGIN + n - 7) * cell, MARGIN * cell);
-  eye(MARGIN * cell, (MARGIN + n - 7) * cell);
+  drawEye(ctx, MARGIN * cell, MARGIN * cell, cell, cfg.finder);
+  drawEye(ctx, (MARGIN + n - 7) * cell, MARGIN * cell, cell, cfg.finder);
+  drawEye(ctx, MARGIN * cell, (MARGIN + n - 7) * cell, cell, cfg.finder);
 
   if (mode === 'logo') drawLogoCard(ctx, cfg, px);
-  if (credit) drawCreditStrip(ctx, px, credit, cfg);
+  if (credit) drawCreditStrip(ctx, px, credit);
 
   return { modules: n, version: (n - 17) / 4 };
 }
@@ -540,8 +512,6 @@ function syncMotionUI() {
   const animated = hasMotion();
   syncSegmented('#motionType', 'motion', state.motion);
   syncSegmented('#exportFormat', 'format', state.format);
-  const gifButton = document.querySelector('#exportFormat button[data-format="gif"]');
-  if (gifButton) gifButton.disabled = !!state.transparent;
   $$('#motionType button').forEach((button) => {
     button.disabled = button.dataset.motion !== 'still' && (!available ||
       (button.dataset.motion === 'source' && !(state.animation?.frames.length > 1)));
@@ -560,7 +530,7 @@ function syncMotionUI() {
   $('gifSizeRow').hidden = state.format !== 'gif';
   $('gifSize').value = String(state.gifSize);
   $('exportHint').textContent = state.format === 'png'
-    ? (state.transparent ? 'Transparent ink PNG — place it on a dark surface to scan.' : 'A high-resolution still. Ready for print.') :
+    ? (state.transparent ? 'Black modules removed — white dots on your photo.' : 'A high-resolution still. Ready for print.') :
     !available ? 'Choose Watermark or Halftone in Style and add a background in Content.' :
     !animated ? 'Choose Breathe, Drift, or Your GIF in the Motion tab first.' :
     'A looping GIF at 10 frames per second. Made for screens.';
@@ -950,8 +920,7 @@ function syncUI() {
   els.transparentBtn.classList.toggle('active', transparentOn);
   els.transparentBtn.setAttribute('aria-pressed', String(transparentOn));
   els.transparentBtn.querySelector('.transparent-state').textContent = transparentOn ? 'On' : 'Off';
-  els.transparentBtn.title = 'Black modules become clear; white modules stay solid. Place on a dark surface to scan.';
-  els.canvas.parentElement.classList.toggle('transparent', transparentOn);
+  els.transparentBtn.title = 'Black QR modules are removed — white dots stay on your photo';
 
   els.dotScaleLabel.textContent = isWatermark ? 'Dot size / image visibility' : 'Dot size / module scale';
   els.dotScaleEnds.children[0].textContent = isWatermark ? 'More photo' : 'Finer';
@@ -1310,10 +1279,6 @@ $('playPauseBtn').addEventListener('click', () => {
 });
 $$('#exportFormat button').forEach((button) => {
   button.addEventListener('click', () => {
-    if (button.dataset.format === 'gif' && state.transparent) {
-      toast('GIF needs solid black ink. Turn transparency off first.', true);
-      return;
-    }
     state.format = button.dataset.format;
     syncMotionUI();
     if (state.format === 'gif' && !hasMotion()) selectEditorTab('motion');

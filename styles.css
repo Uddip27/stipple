@@ -208,7 +208,6 @@ input[type="range"]:disabled { opacity:.4; cursor:default; }
 .status-pill.rendering { color:var(--warning); }
 .canvas-wrap { position:relative; width:min(100%,420px); aspect-ratio:1; margin:auto; padding:12px; background:#fff; border-radius:5px; box-shadow:0 10px 30px -20px rgba(37,60,44,.3); }
 .canvas-wrap canvas { width:100%; height:100%; }
-.canvas-wrap.transparent { background:repeating-conic-gradient(#e8e8e8 0% 25%, #ffffff 0% 50%) 0 0 / 18px 18px; }
 .canvas-wrap.framing-on canvas { cursor:grab; touch-action:pan-y; }
 .canvas-wrap.framing-on.dragging canvas { cursor:grabbing; }
 .crop { display:none; }
