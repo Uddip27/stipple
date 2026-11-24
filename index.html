@@ -28,9 +28,9 @@
       </a>
 
       <nav class="nav-links" id="navLinks" aria-label="Sections">
+        <a href="#how" data-section="how">How it works</a>
         <a href="#studio" data-section="studio">Studio</a>
         <a href="#gallery" data-section="gallery">Inspiration</a>
-        <a href="#how" data-section="how">How it works</a>
         <a href="#story" data-section="story">Story</a>
         <a href="pricing.html">Pricing</a>
       </nav>
@@ -60,9 +60,13 @@
         <p class="hero-sub">Turn a photograph, a logo, or a moving moment into a QR code worth keeping.</p>
         <div class="hero-ctas">
           <a class="btn btn-primary" href="#studio">Make your QR <span class="btn-orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M7 7h10v10"/></svg></span></a>
-          <a class="text-link" href="#gallery">Find your starting point</a>
+          <a class="watch-link" href="#how"><span class="watch-orb" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>See how it works <span class="watch-time">30 sec</span></a>
         </div>
-        <p class="hero-note">No sign-up. No uploads to a server. Just yours.</p>
+        <ul class="hero-points">
+          <li>Checked for scanning while you design</li>
+          <li>PNG, SVG and looping GIF exports</li>
+          <li>No sign-up. Nothing leaves your device.</li>
+        </ul>
       </div>
       <div class="hero-composition">
         <div class="hero-photograph"><img data-photo="landscape" alt="Golden mountain peaks reflected in a still alpine lake"><span class="photo-caption">A place worth coming back to.</span></div>
@@ -75,7 +79,119 @@
         <div class="hero-coordinate" aria-hidden="true"><span>Image + possibility</span><svg viewBox="0 0 60 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1 12h52m-8-7 9 7-9 7"/></svg></div>
       </div>
     </section>
-    <div class="product-note"><span>Small square. Endless possibilities.</span><div><span>Photographs</span><span>Logos</span><span>Animated GIFs</span><span>Made on your device</span></div></div>
+    <!-- ============ TRUST STRIP ============ -->
+    <section class="trust" aria-label="Why people trust PhotoQR">
+      <ul class="trust-facts">
+        <li class="reveal"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><span><strong>Private by design</strong><small>Your photos never leave your device</small></span></li>
+        <li class="reveal" style="--d:.06s"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="m8 12 3 3 5-6"/></svg></span><span><strong>Scan-checked</strong><small>Every change is tested as you design</small></span></li>
+        <li class="reveal" style="--d:.12s"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="M9 12h6"/></svg></span><span><strong>30% damage-proof</strong><small>Highest error correction, level H</small></span></li>
+        <li class="reveal" style="--d:.18s"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span><strong>Never expires</strong><small>Static codes work forever, no subscription</small></span></li>
+        <li class="reveal" style="--d:.24s"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 14h6M9 17h4"/></svg></span><span><strong>Print-ready</strong><small>PNG, vector SVG and looping GIF</small></span></li>
+      </ul>
+      <div class="usecases">
+        <span class="usecases-label">Made for</span>
+        <div class="marquee" aria-hidden="true">
+          <div class="marquee-track usecase-track">
+            <span>Cafés &amp; restaurants</span><span>Weddings</span><span>Creators</span><span>Real estate</span><span>Events &amp; tickets</span><span>Small business</span><span>Product packaging</span><span>Portfolios</span><span>Hotels &amp; guest Wi-Fi</span><span>Musicians</span><span>Shops &amp; retail</span><span>Teachers</span>
+          </div>
+        </div>
+        <p class="sr-only">Made for cafés and restaurants, weddings, creators, real estate, events, small business, product packaging, portfolios, hotels, musicians, shops and teachers.</p>
+      </div>
+    </section>
+
+    <!-- ============ LIVE QR SHOWCASE ============ -->
+    <section class="showcase" id="showcase" aria-labelledby="showcaseTitle">
+      <div class="section-head showcase-head reveal">
+        <h2 id="showcaseTitle">One engine. Endless looks.</h2>
+        <p>Every code below was drawn live in your browser by PhotoQR, and each one passed the scan check before it appeared.</p>
+      </div>
+      <div class="marquee showcase-row"><div class="marquee-track" id="showcaseA"></div></div>
+      <div class="marquee showcase-row reverse"><div class="marquee-track" id="showcaseB"></div></div>
+    </section>
+
+    <!-- ============ HOW IT WORKS — ANIMATED WALKTHROUGH ============ -->
+    <section id="how" class="section how">
+      <div class="section-head how-head reveal">
+        <span class="how-kicker"><span class="tiny-dot"></span>A 30-second tour</span>
+        <h2>See how it works.</h2>
+        <p>From a plain link to a QR code people want to scan, in six small steps. Watch it play, or tap any step.</p>
+      </div>
+
+      <div class="demo" id="demo">
+        <ol class="demo-steps" id="demoSteps" aria-label="Walkthrough steps">
+          <li><button type="button" class="demo-step" data-step="0"><span class="demo-num">1</span><span class="demo-copy"><strong>Add your link</strong><span>Paste a website, or switch to Wi-Fi, email or phone.</span></span><span class="demo-bar" aria-hidden="true"><i></i></span></button></li>
+          <li><button type="button" class="demo-step" data-step="1"><span class="demo-num">2</span><span class="demo-copy"><strong>Pick a photo</strong><span>Drop in your own picture, or start from a sample.</span></span><span class="demo-bar" aria-hidden="true"><i></i></span></button></li>
+          <li><button type="button" class="demo-step" data-step="2"><span class="demo-num">3</span><span class="demo-copy"><strong>Choose a style</strong><span>Dot shapes, colours, or a ready-made template.</span></span><span class="demo-bar" aria-hidden="true"><i></i></span></button></li>
+          <li><button type="button" class="demo-step" data-step="3"><span class="demo-num">4</span><span class="demo-copy"><strong>Add a label</strong><span>A clear call to action like “Scan me”.</span></span><span class="demo-bar" aria-hidden="true"><i></i></span></button></li>
+          <li><button type="button" class="demo-step" data-step="4"><span class="demo-num">5</span><span class="demo-copy"><strong>Check it scans</strong><span>Every change is tested automatically.</span></span><span class="demo-bar" aria-hidden="true"><i></i></span></button></li>
+          <li><button type="button" class="demo-step" data-step="5"><span class="demo-num">6</span><span class="demo-copy"><strong>Download &amp; share</strong><span>PNG for anywhere, SVG for print, GIF for screens.</span></span><span class="demo-bar" aria-hidden="true"><i></i></span></button></li>
+        </ol>
+
+        <div class="demo-stage">
+          <div class="demo-window" id="demoWindow" aria-hidden="true">
+            <div class="demo-chrome"><span></span><span></span><span></span><b>PhotoQR Studio</b></div>
+            <div class="demo-body">
+              <div class="demo-controls">
+                <div class="demo-row" data-row="0">
+                  <span class="demo-label">Link</span>
+                  <div class="demo-input" id="demoInput"><span id="demoText"></span><i class="demo-caret"></i></div>
+                </div>
+                <div class="demo-row" data-row="1">
+                  <span class="demo-label">Photo</span>
+                  <div class="demo-thumbs">
+                    <span class="demo-thumb" data-demo-photo="car"><img data-photo="car" alt=""></span>
+                    <span class="demo-thumb" data-demo-photo="landscape"><img data-photo="landscape" alt=""></span>
+                    <span class="demo-thumb" data-demo-photo="abstract"><img data-photo="abstract" alt=""></span>
+                  </div>
+                </div>
+                <div class="demo-row" data-row="2">
+                  <span class="demo-label">Dots</span>
+                  <div class="demo-pills">
+                    <span class="demo-pill" data-demo-dot="circle">Circle</span>
+                    <span class="demo-pill" data-demo-dot="rounded">Rounded</span>
+                    <span class="demo-pill" data-demo-dot="diamond">Diamond</span>
+                  </div>
+                </div>
+                <div class="demo-row" data-row="3">
+                  <span class="demo-label">Label</span>
+                  <div class="demo-pills">
+                    <span class="demo-pill" data-demo-frame="none">None</span>
+                    <span class="demo-pill" data-demo-frame="dark">Scan me</span>
+                  </div>
+                </div>
+                <div class="demo-row" data-row="5">
+                  <span class="demo-label">Export</span>
+                  <div class="demo-pills">
+                    <span class="demo-pill" data-demo-format="PNG">PNG</span>
+                    <span class="demo-pill" data-demo-format="SVG">SVG</span>
+                    <span class="demo-pill" data-demo-format="GIF">GIF</span>
+                  </div>
+                  <span class="demo-download" id="demoDownload">Download</span>
+                </div>
+              </div>
+              <div class="demo-preview">
+                <div class="demo-plate">
+                  <canvas id="demoCanvas" width="520" height="520"></canvas>
+                  <span class="demo-beam" id="demoBeam"></span>
+                </div>
+                <div class="demo-badge" id="demoBadge"><span class="demo-tick"></span><span id="demoBadgeText">Scans reliably</span></div>
+              </div>
+            </div>
+            <span class="demo-cursor" id="demoCursor"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6.2 1.4L10 19z" fill="#16201c" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+            <span class="demo-toast" id="demoToast">photoqr-1200.png saved</span>
+          </div>
+          <p class="demo-caption" id="demoCaption" aria-live="polite">Add your link.</p>
+          <div class="demo-actions">
+            <button type="button" class="btn btn-ghost btn-sm" id="demoPlay" aria-pressed="true">
+              <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+              <svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>
+              <span id="demoPlayLabel">Pause</span>
+            </button>
+            <a class="btn btn-primary btn-sm" href="#studio">Try it yourself<span class="btn-orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- ============ STUDIO ============ -->
     <section id="studio" class="section studio">
@@ -91,23 +207,56 @@
             <button id="tab-content" role="tab" type="button" aria-selected="true" aria-controls="editor-content" data-editor-tab="content">Content</button>
             <button id="tab-style" role="tab" type="button" aria-selected="false" aria-controls="editor-style" data-editor-tab="style" tabindex="-1">Style</button>
             <button id="tab-motion" role="tab" type="button" aria-selected="false" aria-controls="editor-motion" data-editor-tab="motion" tabindex="-1">Motion <span>GIF</span></button>
+            <button id="tab-designs" role="tab" type="button" aria-selected="false" aria-controls="editor-designs" data-editor-tab="designs" tabindex="-1">Designs</button>
           </div>
           <div id="editor-content" class="editor-pane" role="tabpanel" aria-labelledby="tab-content">
           <!-- 01 CONTENT -->
           <div class="control-group reveal">
             <div class="group-head">
-              <h3><span class="num">01</span>Content</h3>
+              <h3><span class="num">01</span>What should it open?</h3>
               <button class="mini-btn" id="clearText" type="button">Clear</button>
             </div>
-            <label class="sr-only" for="textInput">Text or URL to encode</label>
-            <textarea id="textInput" rows="3" spellcheck="false" placeholder="Paste a link or type a message…">https://photoqr.io</textarea>
-            <div class="field-foot">
-              <div class="chip-row">
-                <button class="chip" type="button" data-text="https://photoqr.io">Website</button>
-                <button class="chip" type="button" data-text="Hello — composed with PhotoQR.">Plain text</button>
-                <button class="chip" type="button" data-text="WIFI:T:WPA;S:PhotoQR;P:scan-me;;">Wi-Fi</button>
+            <div class="type-tabs" id="contentType" role="group" aria-label="Content type">
+              <button type="button" data-type="link" class="active" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>Link</button>
+              <button type="button" data-type="text" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M5 6h14M5 11h14M5 16h9"/></svg>Text</button>
+              <button type="button" data-type="wifi" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.2" r="1" fill="currentColor"/></svg>Wi-Fi</button>
+              <button type="button" data-type="email" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>Email</button>
+              <button type="button" data-type="phone" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>Phone</button>
+            </div>
+
+            <div id="freeFields">
+              <label class="field-label" for="textInput" id="textLabel">Link</label>
+              <textarea id="textInput" class="input" rows="3" spellcheck="false" placeholder="https://your-site.com">https://photoqr.io</textarea>
+              <div class="field-hint" id="linkHint" hidden>
+                <span id="linkHintText">No https:// at the start, so some phones will treat it as plain text.</span>
+                <button class="mini-btn" type="button" id="linkFix">Add https://</button>
               </div>
-              <span class="char-count"><span id="charCount">0</span> chars</span>
+            </div>
+
+            <div class="field-grid" id="wifiFields" hidden>
+              <label class="field"><span class="field-label">Network name</span><input class="input" id="wifiSsid" type="text" autocomplete="off" spellcheck="false" placeholder="Home Wi-Fi"></label>
+              <label class="field"><span class="field-label">Password</span><input class="input" id="wifiPass" type="text" autocomplete="off" spellcheck="false" placeholder="Leave empty for open networks"></label>
+              <label class="field"><span class="field-label">Security</span>
+                <select class="input" id="wifiSec"><option value="WPA">WPA / WPA2 / WPA3</option><option value="WEP">WEP</option><option value="nopass">None (open)</option></select>
+              </label>
+              <label class="check"><input type="checkbox" id="wifiHidden"> Hidden network</label>
+            </div>
+
+            <div class="field-grid" id="emailFields" hidden>
+              <label class="field"><span class="field-label">Send to</span><input class="input" id="emailTo" type="email" autocomplete="off" placeholder="hello@studio.com"></label>
+              <label class="field"><span class="field-label">Subject <em>optional</em></span><input class="input" id="emailSubject" type="text" autocomplete="off" placeholder="Saying hello"></label>
+              <label class="field"><span class="field-label">Message <em>optional</em></span><textarea class="input" id="emailBody" rows="2" placeholder="Pre-filled message"></textarea></label>
+            </div>
+
+            <div class="field-grid" id="phoneFields" hidden>
+              <label class="field"><span class="field-label">Phone number</span><input class="input" id="phoneNumber" type="tel" autocomplete="off" placeholder="+1 555 010 0199"></label>
+              <p class="field-note">Include the country code so it dials correctly anywhere.</p>
+            </div>
+
+            <div class="capacity" id="capacity">
+              <span class="char-count"><span id="charCount">0</span> characters</span>
+              <span class="capacity-meter" aria-hidden="true"><span id="capacityFill"></span></span>
+              <span class="capacity-label" id="capacityLabel">Light and quick to scan</span>
             </div>
           </div>
 
@@ -208,6 +357,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.5"/><path d="M17 12.5l4.5 4.5-4.5 4.5-4.5-4.5z"/><circle cx="17" cy="7.2" r="3.6"/></svg>
                 <span>Geometric</span>
               </button>
+            </div>
+            <div class="photo-look" id="photoLookBlock">
+              <span class="field-label" id="photoLookLabel">Photo look</span>
+              <div class="segmented" id="photoLook" role="group" aria-labelledby="photoLookLabel">
+                <button type="button" data-look="clear" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.6"/></svg>Clear photo</button>
+                <button type="button" data-look="soft" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><rect x="3" y="4" width="18" height="16" rx="2.5" fill="currentColor" opacity=".25" stroke="none"/></svg>Soft wash</button>
+              </div>
             </div>
             <p class="mode-note" id="modeNote">Your photograph shines through translucent dots — keep the white wash up for reliable scans.</p>
 
@@ -319,6 +475,29 @@
             </div>
           </div>
 
+          <!-- FRAME & LABEL -->
+          <div class="control-group">
+            <div class="group-head">
+              <h3>Frame &amp; label</h3>
+            </div>
+            <div class="segmented" id="frameStyle" role="group" aria-label="Frame style">
+              <button type="button" data-frame="none" class="active" aria-pressed="true">None</button>
+              <button type="button" data-frame="light" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 17h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Light label</button>
+              <button type="button" data-frame="dark" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="14.5" width="14" height="6.5" rx="1" fill="currentColor"/></svg>Dark label</button>
+            </div>
+            <div id="frameTextBlock" hidden>
+              <label class="field-label" for="frameText">Call to action</label>
+              <input class="input" id="frameText" type="text" maxlength="28" autocomplete="off" value="Scan me">
+              <div class="chip-row">
+                <button class="chip" type="button" data-frame-text="Scan me">Scan me</button>
+                <button class="chip" type="button" data-frame-text="Scan to visit">Scan to visit</button>
+                <button class="chip" type="button" data-frame-text="Join our Wi-Fi">Join our Wi-Fi</button>
+                <button class="chip" type="button" data-frame-text="See the menu">See the menu</button>
+              </div>
+              <p class="field-note">The label sits under the code in your finder-eye color, so it never touches the pattern.</p>
+            </div>
+          </div>
+
           <!-- 04 DOTS -->
           <div class="control-group reveal">
             <div class="group-head">
@@ -366,6 +545,15 @@
                 <p class="color-note">Solid, rounded corners — helps cameras lock on.</p>
               </div>
             </div>
+            <div class="color-row" id="paperRow">
+              <label class="swatch" id="paperSwatch" title="Pick paper color">
+                <input type="color" id="paperHex" value="#ffffff" aria-label="Paper color">
+              </label>
+              <div class="color-info">
+                <div class="color-head"><span>Paper</span><code id="paperValue">#ffffff</code></div>
+                <p class="color-note">The ground behind the code and its quiet border. Keep it light.</p>
+              </div>
+            </div>
           </div>
 
           <!-- 06 CONTRAST -->
@@ -382,7 +570,7 @@
                 <input type="range" id="overlay" min="-80" max="80" step="1" value="55">
                 <div class="range-ends"><span>Dark wash</span><span>White wash</span></div>
               </div>
-              <p class="tip">A white wash keeps the dots scannable — lower it to let more of the photo through.</p>
+              <p class="tip">At 0% the photo shows at full clarity. Add a white wash only if the scan check asks for more contrast.</p>
             </div>
             <button class="btn btn-ghost btn-block" id="resetBtn" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
@@ -409,6 +597,25 @@
               <div class="motion-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><p>The QR pattern stays in place throughout the loop. Always scan-test your finished GIF before sharing.</p></div>
             </div>
           </div>
+          <div id="editor-designs" class="editor-pane" role="tabpanel" aria-labelledby="tab-designs" hidden>
+            <div class="control-group">
+              <div class="group-head"><h3>Templates</h3></div>
+              <p class="group-note">A finished look in one click. Your content stays as it is.</p>
+              <div class="template-grid" id="templateGrid"></div>
+            </div>
+            <div class="control-group">
+              <div class="group-head">
+                <h3>Saved on this device</h3>
+                <button class="mini-btn" type="button" id="saveDesignInline">Save current</button>
+              </div>
+              <div class="saved-list" id="savedList"></div>
+              <div class="empty-state" id="savedEmpty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+                <p class="empty-title">No saved designs yet</p>
+                <p class="empty-sub">Save a design to come back to it, duplicate it, or try variations. Designs stay in this browser.</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- PREVIEW PLATE -->
@@ -416,7 +623,11 @@
           <div class="plate-mount preview-plate reveal" id="previewCard">
             <div class="preview-head">
               <h3>Your QR</h3>
-              <span class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">Live</span></span>
+              <div class="preview-tools">
+                <button class="tool-btn" id="undoBtn" type="button" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+                <button class="tool-btn" id="redoBtn" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+                <span class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusText">Live</span></span>
+              </div>
             </div>
             <div class="canvas-wrap plate-core">
               <span class="crop crop-tl" aria-hidden="true"></span>
@@ -429,6 +640,14 @@
                 <p id="overlayMsg">Type a message or URL to begin</p>
               </div>
             </div>
+            <div class="scan-check" id="scanCheck" data-level="pending" role="status" aria-live="polite">
+              <span class="scan-icon" aria-hidden="true"></span>
+              <div class="scan-copy">
+                <p class="scan-title" id="scanTitle">Checking readability…</p>
+                <p class="scan-detail" id="scanDetail">Every dot is tested the way a phone camera sees it.</p>
+              </div>
+              <button class="mini-btn" type="button" id="scanFix" hidden>Improve</button>
+            </div>
             <div class="preview-meta">
               <span id="qrMeta">— modules · EC H (30%)</span>
               <span id="exportDims">1200 × 1200</span>
@@ -440,10 +659,12 @@
             </div>
             <div class="export-settings">
               <div class="segmented" id="exportFormat" role="group" aria-label="Download format">
-                <button type="button" data-format="png" class="active" aria-pressed="true">PNG <small>Still image</small></button>
-                <button type="button" data-format="gif" aria-pressed="false">GIF <small>Animated loop</small></button>
+                <button type="button" data-format="png" class="active" aria-pressed="true">PNG <small>Image</small></button>
+                <button type="button" data-format="svg" aria-pressed="false">SVG <small>Vector</small></button>
+                <button type="button" data-format="gif" aria-pressed="false">GIF <small>Animated</small></button>
               </div>
-              <label class="gif-size" id="gifSizeRow" hidden>GIF size<select id="gifSize"><option value="600">600 × 600 · lighter file</option><option value="1200">1200 × 1200 · high resolution</option></select></label>
+              <label class="gif-size" id="pngSizeRow">Resolution<select id="pngSize" class="input input-sm"><option value="1200">1200 px · Free</option><option value="2048">2048 px · Pro</option><option value="4096">4096 px · Business</option></select></label>
+              <label class="gif-size" id="gifSizeRow" hidden>GIF size<select id="gifSize" class="input input-sm"><option value="600">600 × 600 · lighter file</option><option value="1200">1200 × 1200 · high resolution</option></select></label>
               <p class="export-hint" id="exportHint">A high-resolution still. Ready for print.</p>
             </div>
             <div class="export-progress" id="exportProgress" hidden role="status" aria-live="polite">
@@ -458,6 +679,9 @@
               <button class="btn btn-ghost copy-btn" id="copyBtn" type="button" aria-label="Copy PNG to clipboard" title="Copy PNG to clipboard">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               </button>
+              <button class="btn btn-ghost copy-btn" id="saveDesignBtn" type="button" aria-label="Save design" title="Save design to this device">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+              </button>
             </div>
             <div class="license-row">
               <span id="licenseNote">Free plan · exports carry a PhotoQR credit</span>
@@ -465,11 +689,15 @@
             </div>
             <p class="scan-tip">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M4 12h16"/></svg>
-              Test with your phone camera before printing
+              Still worth a test with your own phone before printing
             </p>
           </div>
         </aside>
       </div>
+      <button class="mini-preview" id="miniPreview" type="button" aria-label="Jump to the live preview" hidden>
+        <canvas id="miniCanvas" width="160" height="160" aria-hidden="true"></canvas>
+        <span>Preview</span>
+      </button>
     </section>
 
     <!-- ============ SPECIMENS — ASYMMETRICAL BENTO ============ -->
@@ -527,45 +755,6 @@
       </div>
     </section>
 
-    <!-- ============ METHOD — NUMBERED LEDGER ============ -->
-    <section id="how" class="section how">
-      <div class="section-head reveal">
-        <h2>From a link to a keeper.</h2>
-        <p>A few small choices. Something entirely your own.</p>
-      </div>
-      <div class="ledger">
-        <article class="ledger-row reveal">
-          <span class="ledger-num">01</span>
-          <div class="ledger-body">
-            <h3>Give it somewhere to go.</h3>
-            <p>A playlist, your portfolio, a wedding album. Paste a link or write a message.</p>
-          </div>
-        </article>
-        <article class="ledger-row reveal" style="--d:.08s">
-          <span class="ledger-num">02</span>
-          <div class="ledger-body">
-            <h3>Make it look like you.</h3>
-            <p>Add a photo or logo. Find your colors. Bring a still image to life, or use your own animated GIF.</p>
-          </div>
-        </article>
-        <article class="ledger-row reveal" style="--d:.16s">
-          <span class="ledger-num">03</span>
-          <div class="ledger-body">
-            <h3>Take it out into the world.</h3>
-            <p>Download a high-resolution PNG or a looping GIF. Scan-test with your phone before you print or share.</p>
-          </div>
-        </article>
-      </div>
-      <div class="pipeline reveal" aria-label="Render order">
-        <span class="pipe-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m5 17 5-4 3 2.5L18 11l3 3"/></svg>Photo</span>
-        <svg class="pipe-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        <span class="pipe-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg>Contrast wash</span>
-        <svg class="pipe-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        <span class="pipe-chip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>PhotoQR matrix</span>
-        <svg class="pipe-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        <span class="pipe-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><circle cx="17" cy="17" r="2.4" fill="currentColor" stroke="none"/></svg>Finder eyes</span>
-      </div>
-    </section>
 
     <section id="story" class="story">
       <div class="story-photo"><img data-photo="landscape" alt="An alpine lake reflecting the mountains at sunset" loading="lazy"></div>
@@ -617,6 +806,19 @@
     </form>
   </dialog>
 
+  <dialog id="designDialog" aria-labelledby="designDialogTitle">
+    <form id="designForm">
+      <h3 id="designDialogTitle">Save design</h3>
+      <p class="unlock-lede">Saved in this browser only. Nothing is uploaded.</p>
+      <label for="designName">Name</label>
+      <input id="designName" class="input" name="name" type="text" maxlength="48" autocomplete="off" required>
+      <div class="unlock-actions">
+        <button type="button" class="btn btn-ghost" id="designCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="designSubmit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
     <span id="toastMsg"></span>
@@ -625,6 +827,11 @@
   <script src="vendor/qrcode.js"></script>
   <script src="assets/samples.js"></script>
   <script src="qr-gif.js"></script>
+  <script src="qr-svg.js"></script>
+  <script src="qr-check.js"></script>
   <script src="app.js"></script>
+  <script src="studio.js"></script>
+  <script src="how.js"></script>
+  <script src="showcase.js"></script>
 </body>
 </html>

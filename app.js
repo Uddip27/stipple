@@ -13,7 +13,7 @@ const FRAME_DELAY = 100;
 const DEFAULTS = {
   text: 'https://photoqr.io',
   mode: 'watermark',
-  dotScale: 0.38,
+  dotScale: 0.36,
   dotStyle: 'circle',
   colorType: 'solid',
   gradAngle: 45,
@@ -21,10 +21,13 @@ const DEFAULTS = {
   logoInset: 22,
   logoShape: 'circle',
   threshold: 0.5,
-  dark: { hex: '#1e293b', alpha: 0.85 },
-  light: { hex: '#ffffff', alpha: 0.75 },
+  dark: { hex: '#1e293b', alpha: 1 },
+  light: { hex: '#ffffff', alpha: 1 },
   finder: '#334155',
-  overlay: 55,
+  overlay: 0,
+  paper: '#ffffff',
+  frame: 'none',
+  frameText: 'Scan me',
   sampleId: 'landscape',
 };
 
@@ -58,6 +61,8 @@ const state = {
   duration: 3,
   format: 'png',
   gifSize: 600,
+  exportSize: 1200,
+  contentType: 'link',
   playing: false,
   hasResult: false,
   unlocked: false,
@@ -252,13 +257,13 @@ function drawLogoCard(ctx, cfg, px) {
   ctx.restore();
 }
 
-function drawEye(ctx, x, y, cell, color) {
+function drawEye(ctx, x, y, cell, color, paper = '#ffffff') {
   const s = 7 * cell;
   ctx.fillStyle = color;
   ctx.beginPath();
   roundRectPath(ctx, x, y, s, s, cell * 1.4);
   ctx.fill();
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = paper;
   ctx.beginPath();
   roundRectPath(ctx, x + cell, y + cell, s - 2 * cell, s - 2 * cell, cell * 0.9);
   ctx.fill();
@@ -272,12 +277,61 @@ let matrixText;
 let matrix;
 
 const CREDIT_RATIO = 0.055;
-const CREDIT_MATTE = '#dbeafe';
+const FRAME_RATIO = 0.14;
+const FRAME_MAX = 28;
 function creditHeight(px, cfg) {
   return cfg.credit === false || cfg.unlocked ? 0 : Math.round(px * CREDIT_RATIO);
 }
 
-function drawCreditStrip(ctx, px, h) {
+function frameHeight(px, cfg) {
+  return cfg.frame === 'light' || cfg.frame === 'dark' ? Math.round(px * FRAME_RATIO) : 0;
+}
+
+/* CTA label band under the code, e.g. "Scan me". Never covers modules. */
+function frameColors(cfg) {
+  return cfg.frame === 'dark'
+    ? { band: cfg.finder, text: '#ffffff' }
+    : { band: cfg.paper || '#ffffff', text: cfg.finder };
+}
+
+function frameLabel(cfg) {
+  return (cfg.frameText || '').trim().slice(0, FRAME_MAX) || 'Scan me';
+}
+
+function drawFrameBand(ctx, px, y, h, cfg) {
+  const { band, text } = frameColors(cfg);
+  ctx.fillStyle = band;
+  ctx.fillRect(0, y, px, h);
+  const label = frameLabel(cfg);
+  let fs = Math.round(h * 0.36);
+  ctx.font = `600 ${fs}px Switzer, system-ui, sans-serif`;
+  const icon = h * 0.36;
+  const gap = h * 0.2;
+  while (fs > 8 && ctx.measureText(label).width + icon + gap > px * 0.84) {
+    fs -= 1;
+    ctx.font = `600 ${fs}px Switzer, system-ui, sans-serif`;
+  }
+  const tw = ctx.measureText(label).width;
+  const x0 = (px - (icon + gap + tw)) / 2;
+  const cy = y + h * 0.47;
+  // small upward chevron pointing at the code
+  ctx.strokeStyle = text;
+  ctx.lineWidth = Math.max(1.5, icon * 0.14);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x0, cy + icon * 0.22);
+  ctx.lineTo(x0 + icon / 2, cy - icon * 0.28);
+  ctx.lineTo(x0 + icon, cy + icon * 0.22);
+  ctx.stroke();
+  ctx.fillStyle = text;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x0 + icon + gap, cy);
+}
+
+function drawCreditStrip(ctx, px, h, top = px) {
+  ctx.save();
+  ctx.translate(0, top - px);
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, px, px, h);
   ctx.fillStyle = '#e2e8e3';
@@ -302,23 +356,30 @@ function drawCreditStrip(ctx, px, h) {
   ctx.fill();
   ctx.fillStyle = '#1c2622';
   ctx.fillText(label, x0 + g + gap, cy);
+  ctx.restore();
+}
+
+function getMatrix(text) {
+  if (matrixText !== text) {
+    const next = qrcode(0, 'H');
+    next.addData(text);
+    next.make();
+    matrix = next;
+    matrixText = text;
+  }
+  return matrix;
 }
 
 function renderQR(canvas, cfg, px) {
-  if (matrixText !== cfg.text) {
-    const next = qrcode(0, 'H');
-    next.addData(cfg.text);
-    next.make();
-    matrix = next;
-    matrixText = cfg.text;
-  }
-  const qr = matrix;
+  const qr = getMatrix(cfg.text);
   const n = qr.getModuleCount();
+  const paper = cfg.paper || '#ffffff';
 
   const ctx = canvas.getContext('2d');
   const credit = creditHeight(px, cfg);
+  const band = frameHeight(px, cfg);
   canvas.width = px;
-  canvas.height = px + credit;
+  canvas.height = px + band + credit;
 
   const mode = cfg.mode || 'watermark';
   const isWatermark = mode === 'watermark';
@@ -331,29 +392,33 @@ function renderQR(canvas, cfg, px) {
       ctx.fillStyle = cfg.overlay > 0 ? `rgba(255, 255, 255, ${a})` : `rgba(2, 6, 23, ${a})`;
       ctx.fillRect(0, 0, px, px);
     }
-  } else if (isWatermark) {
+  } else if (isWatermark && paper.toLowerCase() === '#ffffff') {
     const g = ctx.createLinearGradient(0, 0, px, px);
     g.addColorStop(0, '#ffffff');
     g.addColorStop(1, '#d7e0ec');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, px, px);
   } else {
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = paper;
     ctx.fillRect(0, 0, px, px);
   }
 
   const quiet = MARGIN * cell;
-  ctx.fillStyle = credit ? CREDIT_MATTE : '#ffffff';
-  ctx.fillRect(0, 0, px, quiet);
-  ctx.fillRect(0, px - quiet, px, quiet);
-  ctx.fillRect(0, quiet, quiet, px - quiet * 2);
-  ctx.fillRect(px - quiet, quiet, quiet, px - quiet * 2);
+  // quiet zone: one ring-shaped path (outer square minus inner square), so there
+  // are no anti-aliased seams where separate strips would meet
+  ctx.fillStyle = paper;
+  ctx.beginPath();
+  ctx.rect(0, 0, px, px);
+  ctx.rect(quiet, quiet, px - quiet * 2, px - quiet * 2);
+  ctx.fill('evenodd');
 
   const lum = mode === 'halftone' && cfg.image ? sampleLuminance(cfg.image, n, cfg) : null;
   const ink = makeInk(ctx, cfg, px, isWatermark && cfg.colorType === 'solid' ? cfg.dark.alpha : 1);
   const light = rgba(cfg.light.hex, cfg.light.alpha);
   const d = cell * cfg.dotScale;
   const inFinder = (r, c) => (r < 8 && c < 8) || (r < 8 && c >= n - 8) || (r >= n - 8 && c < 8);
+  // the 7×7 eye itself; the light separator ring around it is drawn like any light module
+  const inEye = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
   const cxOf = (c) => (MARGIN + c + 0.5) * cell;
   const cyOf = (r) => (MARGIN + r + 0.5) * cell;
 
@@ -385,7 +450,7 @@ function renderQR(canvas, cfg, px) {
     const shape = cfg.dotStyle === 'lines' ? 'rounded' : cfg.dotStyle;
     for (let r = 0; r < n; r++) {
       for (let c = 0; c < n; c++) {
-        if (inFinder(r, c)) continue;
+        if (inEye(r, c)) continue;
         const isDark = qr.isDark(r, c);
         if (mode === 'halftone') {
           if (!isDark) continue;
@@ -409,12 +474,13 @@ function renderQR(canvas, cfg, px) {
     }
   }
 
-  drawEye(ctx, MARGIN * cell, MARGIN * cell, cell, cfg.finder);
-  drawEye(ctx, (MARGIN + n - 7) * cell, MARGIN * cell, cell, cfg.finder);
-  drawEye(ctx, MARGIN * cell, (MARGIN + n - 7) * cell, cell, cfg.finder);
+  drawEye(ctx, MARGIN * cell, MARGIN * cell, cell, cfg.finder, paper);
+  drawEye(ctx, (MARGIN + n - 7) * cell, MARGIN * cell, cell, cfg.finder, paper);
+  drawEye(ctx, MARGIN * cell, (MARGIN + n - 7) * cell, cell, cfg.finder, paper);
 
   if (mode === 'logo') drawLogoCard(ctx, cfg, px);
-  if (credit) drawCreditStrip(ctx, px, credit);
+  if (band) drawFrameBand(ctx, px, px, band, cfg);
+  if (credit) drawCreditStrip(ctx, px, credit, px + band);
 
   return { modules: n, version: (n - 17) / 4 };
 }
@@ -515,12 +581,22 @@ function syncMotionUI() {
   $('playbackInfo').textContent = `${Number((loopDuration() / 1000).toFixed(2))} second loop`;
   $('gifSizeRow').hidden = state.format !== 'gif';
   $('gifSize').value = String(state.gifSize);
-  $('exportHint').textContent = state.format === 'png' ? 'A high-resolution still. Ready for print.' :
-    !available ? 'Choose Watermark or Halftone in Style and add a background in Content.' :
-    !animated ? 'Choose Breathe, Drift, or Your GIF in the Motion tab first.' :
-    'A looping GIF at 10 frames per second. Made for screens.';
-  els.downloadLabel.textContent = exportController ? 'Making your GIF…' :
-    state.format === 'gif' ? `Download ${state.gifSize} × ${state.gifSize} GIF` : 'Download 1200 × 1200 PNG';
+  $('pngSizeRow').hidden = state.format !== 'png';
+  $$('#pngSize option').forEach((o) => { o.disabled = !sizeAllowed(Number(o.value)); });
+  if (!sizeAllowed(state.exportSize)) state.exportSize = 1200;
+  $('pngSize').value = String(state.exportSize);
+  const locked = formatLocked();
+  $('exportHint').textContent = state.format === 'png'
+    ? (state.unlocked ? 'A high-resolution still. Ready for print.' : 'A 1200 px still with a small PhotoQR credit. Unlock for 2048 px and clean exports.')
+    : state.format === 'svg'
+      ? (locked ? 'Infinitely sharp vector for print and signage. Included with any paid plan.' : 'Infinitely sharp vector. Photos and logos are embedded inside the file.')
+      : !available ? 'Choose Watermark or Halftone in Style and add a background in Content.'
+        : !animated ? 'Choose Breathe, Drift, or Your GIF in the Motion tab first.'
+          : 'A looping GIF at 10 frames per second. Made for screens.';
+  els.downloadLabel.textContent = exportController ? 'Making your GIF…'
+    : state.format === 'gif' ? `Download ${state.gifSize} × ${state.gifSize} GIF`
+      : state.format === 'svg' ? (locked ? 'Unlock SVG export' : 'Download SVG')
+        : 'Download PNG';
   els.downloadBtn.disabled = !!exportController || !state.hasResult || (state.format === 'gif' && !animated);
   els.downloadBtn.classList.toggle('disabled', els.downloadBtn.disabled);
   els.downloadBtn.setAttribute('aria-disabled', String(els.downloadBtn.disabled));
@@ -562,9 +638,10 @@ function renderMain() {
   syncFramingUI();
   const text = state.text.trim();
   if (!text) {
-    showOverlay('Type a message or URL to begin');
+    showOverlay('Add a link or message to begin');
     setStatus('error', 'Empty');
     els.qrMeta.textContent = '— modules · EC H (30%)';
+    renderHooks.forEach((hook) => hook(null));
     syncMotionUI();
     updatePlayback();
     return;
@@ -578,13 +655,18 @@ function renderMain() {
     $('exportDims').textContent = `${els.canvas.width} × ${els.canvas.height}`;
     hideOverlay();
     setStatus('live', 'Live');
+    renderHooks.forEach((hook) => hook(info));
   } catch (err) {
     showOverlay('This text is too long for one QR code. Shorten it and try again.');
     setStatus('error', 'Too long');
+    renderHooks.forEach((hook) => hook(null));
   }
   syncMotionUI();
   updatePlayback();
 }
+
+/* Other modules (studio.js) subscribe here: readability check, history, mini preview. */
+const renderHooks = [];
 
 /* ---------------- image handling ---------------- */
 
@@ -839,6 +921,47 @@ function syncColorUI() {
   els.finderHex.value = state.finder;
   els.finderValue.textContent = state.finder;
   syncSwatch(els.finderSwatch, state.finder);
+
+  $('paperHex').value = state.paper;
+  $('paperValue').textContent = state.paper;
+  syncSwatch($('paperSwatch'), state.paper);
+  syncLookUI();
+}
+
+/* Watermark "looks". Clear: no wash, solid dots — the photo stays vivid and the
+   solid centre of every dot is what the scanner reads. Soft: the classic white wash. */
+const PHOTO_LOOKS = {
+  clear: { overlay: 0, darkAlpha: 1, lightAlpha: 1, minDot: 0.34 },
+  soft: { overlay: 55, darkAlpha: 0.85, lightAlpha: 0.75, minDot: 0 },
+};
+
+function currentLook() {
+  if (state.overlay === 0 && state.dark.alpha === 1 && state.light.alpha === 1) return 'clear';
+  if (state.overlay >= 40) return 'soft';
+  return null;
+}
+
+function syncLookUI() {
+  $('photoLookBlock').hidden = state.mode !== 'watermark';
+  syncSegmented('#photoLook', 'look', currentLook());
+}
+
+$$('#photoLook button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const look = PHOTO_LOOKS[btn.dataset.look];
+    state.overlay = look.overlay;
+    state.dark.alpha = look.darkAlpha;
+    state.light.alpha = look.lightAlpha;
+    state.dotScale = Math.max(state.dotScale, look.minDot);
+    syncUI();
+    scheduleRender();
+  });
+});
+
+function syncFrameUI() {
+  syncSegmented('#frameStyle', 'frame', state.frame);
+  $('frameTextBlock').hidden = state.frame === 'none';
+  if (document.activeElement !== $('frameText')) $('frameText').value = state.frameText;
 }
 
 function overlayLabel(v) {
@@ -847,7 +970,7 @@ function overlayLabel(v) {
 }
 
 const MODE_NOTES = {
-  watermark: 'Your photograph shines through translucent dots — keep the white wash up for reliable scans.',
+  watermark: 'Your photograph sits behind a grid of small dots. Scanners only read the centre of each dot, so the picture can stay clear.',
   logo: 'Solid ink on clean paper, your mark on a white card at the center. Level H covers the gap.',
   halftone: 'Each dot swells with the photo’s darkness — the image emerges from the matrix itself.',
   geometric: 'Pure geometry on white — crisp shapes, solid ink, maximum contrast.',
@@ -904,6 +1027,8 @@ function syncUI() {
   els.dotScaleEnds.children[1].textContent = isWatermark ? 'Bolder code' : 'Bolder';
 
   syncColorUI();
+  syncFrameUI();
+  syncLookUI();
 
   els.overlay.value = state.overlay;
   els.overlayValue.textContent = overlayLabel(state.overlay);
@@ -936,6 +1061,9 @@ function applyConfig(cfg) {
   state.light = { ...cfg.light };
   state.finder = cfg.finder;
   state.overlay = cfg.overlay;
+  state.paper = cfg.paper || DEFAULTS.paper;
+  state.frame = cfg.frame || DEFAULTS.frame;
+  state.frameText = cfg.frameText || DEFAULTS.frameText;
   syncUI();
   scheduleRender();
 }
@@ -971,7 +1099,7 @@ $('clearText').addEventListener('click', () => {
   scheduleRender();
 });
 
-$$('.chip').forEach((chip) => {
+$$('.chip[data-text]').forEach((chip) => {
   chip.addEventListener('click', () => {
     els.text.value = chip.dataset.text;
     els.charCount.textContent = chip.dataset.text.length;
@@ -1050,9 +1178,24 @@ els.darkAlpha.addEventListener('input', () => { state.dark.alpha = els.darkAlpha
 els.lightHex.addEventListener('input', () => { state.light.hex = els.lightHex.value; syncColorUI(); scheduleRender(); });
 els.lightAlpha.addEventListener('input', () => { state.light.alpha = els.lightAlpha.value / 100; syncColorUI(); scheduleRender(); });
 els.finderHex.addEventListener('input', () => { state.finder = els.finderHex.value; syncColorUI(); scheduleRender(); });
+$('paperHex').addEventListener('input', () => { state.paper = $('paperHex').value; syncColorUI(); scheduleRender(); });
+
+bindSegmented('#frameStyle', 'frame', 'frame', syncFrameUI);
+$('frameText').addEventListener('input', () => {
+  state.frameText = $('frameText').value;
+  scheduleRender();
+});
+$$('[data-frame-text]').forEach((chip) => {
+  chip.addEventListener('click', () => {
+    state.frameText = chip.dataset.frameText;
+    $('frameText').value = state.frameText;
+    scheduleRender();
+  });
+});
 
 els.overlay.addEventListener('input', () => {
   state.overlay = parseInt(els.overlay.value, 10);
+  syncLookUI();
   els.overlayValue.textContent = overlayLabel(state.overlay);
   fillRange(els.overlay);
   scheduleRender();
@@ -1159,6 +1302,27 @@ $$('.sample-tile').forEach((tile) => {
   });
 });
 
+/* Export entitlements, matching the pricing page:
+   free 1200 px PNG · any paid plan 2048 px + SVG · Business 4096 px. */
+function sizeAllowed(px) {
+  if (px <= 1200) return true;
+  if (!state.unlocked) return false;
+  return px <= 2048 || state.plan === 'business';
+}
+
+function formatLocked() {
+  return state.format === 'svg' && !state.unlocked;
+}
+
+function exportName() {
+  const t = state.text.trim();
+  let base = 'photoqr';
+  try {
+    if (/^https?:\/\//i.test(t)) base = new URL(t).hostname.replace(/^www\./, '');
+  } catch { /* not a URL */ }
+  return base.replace(/[^a-z0-9.-]+/gi, '-').slice(0, 40) || 'photoqr';
+}
+
 function saveBlob(blob, name) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -1174,11 +1338,30 @@ els.downloadBtn.addEventListener('click', async () => {
   state.text = els.text.value;
   renderMain();
   if (!state.hasResult || (state.format === 'gif' && !hasMotion())) return;
+  if (state.format === 'svg') {
+    if (formatLocked()) { openUnlock('SVG export is included with every paid plan.'); return; }
+    try {
+      const image = motionImage(state, previewTime(), previewSurface, SIZE);
+      const svg = PhotoQRSVG.build({ ...state, text: state.text.trim(), image }, SIZE);
+      saveBlob(new Blob([svg], { type: 'image/svg+xml' }), `${exportName()}.svg`);
+      toast('Vector SVG downloaded');
+    } catch {
+      toast('Could not build the SVG. Try PNG instead.', true);
+    }
+    return;
+  }
   if (state.format === 'png') {
-    els.canvas.toBlob((blob) => {
+    const px = sizeAllowed(state.exportSize) ? state.exportSize : 1200;
+    let target = els.canvas;
+    if (px !== SIZE) {
+      target = document.createElement('canvas');
+      const image = motionImage(state, previewTime(), document.createElement('canvas'), px);
+      renderQR(target, { ...state, text: state.text.trim(), image }, px);
+    }
+    target.toBlob((blob) => {
       if (blob) {
-        saveBlob(blob, 'photoqr-1200.png');
-        toast(`${els.canvas.width} × ${els.canvas.height} PNG downloaded`);
+        saveBlob(blob, `${exportName()}-${px}.png`);
+        toast(`${target.width} × ${target.height} PNG downloaded`);
       } else toast('Could not export this image. Try another background.', true);
     }, 'image/png');
     return;
@@ -1212,7 +1395,7 @@ els.downloadBtn.addEventListener('click', async () => {
         $('exportProgressText').textContent = `Making your GIF · ${completed} / ${total} frames`;
       },
     });
-    saveBlob(blob, `photoqr-${px}.gif`);
+    saveBlob(blob, `${exportName()}-${px}.gif`);
     toast(`Looping GIF downloaded · ${fmtSize(blob.size)}`);
   } catch (error) {
     toast(error.name === 'AbortError' ? 'GIF export cancelled' : error.message || 'Could not export GIF', error.name !== 'AbortError');
@@ -1253,6 +1436,10 @@ $$('#exportFormat button').forEach((button) => {
     if (state.format === 'gif' && !hasMotion()) selectEditorTab('motion');
   });
 });
+$('pngSize').addEventListener('change', () => {
+  state.exportSize = Number($('pngSize').value);
+  syncMotionUI();
+});
 $('gifSize').addEventListener('change', () => {
   state.gifSize = Number($('gifSize').value);
   syncMotionUI();
@@ -1289,7 +1476,8 @@ els.copyBtn.addEventListener('click', () => {
 $$('[data-use-preset]').forEach((btn) => {
   btn.addEventListener('click', () => {
     const p = PRESETS[btn.dataset.usePreset];
-    applyConfig(p);
+    clearTimeout(textTimer);
+    applyConfig({ ...p, text: els.text.value.trim() ? els.text.value : p.text });
     loadSample(p.sampleId, true);
     document.getElementById('studio').scrollIntoView({ behavior: motionPreference.matches ? 'auto' : 'smooth' });
     toast(`Preset “${p.name}” applied`);
@@ -1438,12 +1626,15 @@ function clearLicense() {
 }
 
 const unlockDialog = $('unlockDialog');
-$('unlockBtn').addEventListener('click', () => {
+const unlockLede = $('unlockDialog').querySelector('.unlock-lede').textContent;
+function openUnlock(reason) {
   $('unlockMsg').hidden = true;
   $('licenseCode').value = '';
+  unlockDialog.querySelector('.unlock-lede').textContent = reason ? `${reason} ${unlockLede}` : unlockLede;
   unlockDialog.showModal();
   $('licenseCode').focus();
-});
+}
+$('unlockBtn').addEventListener('click', () => openUnlock());
 $('unlockCancel').addEventListener('click', () => unlockDialog.close());
 $('unlockForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -1502,3 +1693,5 @@ if (storedLicense && storedLicense.code) {
 syncUI();
 loadSample(DEFAULTS.sampleId, true).then(renderMain);
 renderShowcases();
+// the CTA label and credit strip use Switzer; repaint once the webfont is ready
+document.fonts?.ready.then(() => scheduleRender());
